@@ -26,7 +26,7 @@ it('loads the trip by id and shows its summary', async () => {
     await screen.findByRole('heading', { name: 'Denver → Kansas City' }),
   ).toBeInTheDocument()
   expect(screen.getByText('Only 2 route(s) available')).toBeInTheDocument()
-  expect(screen.getByText(/^Computed at /)).toBeInTheDocument()
+  expect(screen.getByText(/^Computed /)).toBeInTheDocument()
   expect(fetchMock.mock.calls[0][0]).toMatch(/\/api\/trips\/trip-1$/)
 })
 

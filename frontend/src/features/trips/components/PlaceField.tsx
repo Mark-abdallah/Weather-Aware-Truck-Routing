@@ -30,10 +30,10 @@ function SuggestionList({
   field: PlaceFieldState
   label: string
 }) {
-  if (field.failed) return <p role="status">{SUGGESTIONS_FAILED}</p>
+  if (field.failed) return <SuggestionsUnavailable />
   if (field.options.length === 0) return null
   return (
-    <ul aria-label={`${label} suggestions`}>
+    <ul className="suggestions" aria-label={`${label} suggestions`}>
       {field.options.map((place) => (
         <SuggestionItem key={placeKey(place)} place={place} field={field} />
       ))}
@@ -54,6 +54,14 @@ function SuggestionItem({
         {place.label}
       </button>
     </li>
+  )
+}
+
+function SuggestionsUnavailable() {
+  return (
+    <p className="field-hint" role="status">
+      {SUGGESTIONS_FAILED}
+    </p>
   )
 }
 

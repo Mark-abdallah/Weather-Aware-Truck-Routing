@@ -5,9 +5,12 @@ import {
   formatMiles,
   formatRisk,
   levelBreakdown,
+  levelShares,
   type LevelMiles,
 } from '../routeSummary'
 import type { Route } from '../types/trip'
+
+const RANK_DIGITS = 2
 
 export function RouteCards({ routes }: { routes: Route[] }) {
   return (
@@ -21,13 +24,29 @@ export function RouteCards({ routes }: { routes: Route[] }) {
 
 function RouteCard({ route }: { route: Route }) {
   return (
-    <li className="route-card" aria-label={`Route ${route.rank}`}>
-      <h3>{`Route ${route.rank}`}</h3>
-      {route.recommended && <span className="badge">Recommended</span>}
+    <li className={cardClass(route)} aria-label={`Route ${route.rank}`}>
+      <CardHeading route={route} />
       {route.has_no_travel && <NoTravelWarning />}
       <RouteStats route={route} />
+      <LevelBar route={route} />
       <LevelList levels={levelBreakdown(route)} />
     </li>
+  )
+}
+
+function cardClass(route: Route): string {
+  return route.recommended ? 'route-card is-recommended' : 'route-card'
+}
+
+function CardHeading({ route }: { route: Route }) {
+  return (
+    <div className="card-heading">
+      <span className="rank">
+        {String(route.rank).padStart(RANK_DIGITS, '0')}
+      </span>
+      <h3>{`Route ${route.rank}`}</h3>
+      {route.recommended && <span className="badge">Recommended</span>}
+    </div>
   )
 }
 
@@ -42,13 +61,35 @@ function NoTravelWarning() {
 function RouteStats({ route }: { route: Route }) {
   return (
     <dl className="route-stats">
-      <dt>Distance</dt>
-      <dd>{formatMiles(route.length_miles)}</dd>
-      <dt>Duration</dt>
-      <dd>{formatDuration(route.duration_s)}</dd>
-      <dt>Average risk</dt>
-      <dd>{`${formatRisk(route.metrics.average_risk)} / 4`}</dd>
+      <Stat term="Distance" value={formatMiles(route.length_miles)} />
+      <Stat term="Duration" value={formatDuration(route.duration_s)} />
+      <Stat
+        term="Average risk"
+        value={`${formatRisk(route.metrics.average_risk)} / 4`}
+      />
     </dl>
+  )
+}
+
+function Stat({ term, value }: { term: string; value: string }) {
+  return (
+    <div className="stat">
+      <dt>{term}</dt>
+      <dd>{value}</dd>
+    </div>
+  )
+}
+
+function LevelBar({ route }: { route: Route }) {
+  return (
+    <div className="level-bar" aria-hidden="true">
+      {levelShares(route).map(({ level, percent }) => (
+        <span
+          key={level}
+          style={{ width: `${percent}%`, background: LEVEL_COLORS[level] }}
+        />
+      ))}
+    </div>
   )
 }
 

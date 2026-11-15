@@ -16,7 +16,7 @@ import {
   routesCollection,
 } from './tripGeoJson'
 
-export const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/liberty'
+export const MAP_STYLE_URL = 'https://tiles.openfreemap.org/styles/dark'
 const ROUTE_SOURCE = 'routes'
 const CHECKPOINT_SOURCE = 'checkpoints'
 const HEATMAP_SOURCE = 'heatmap'
@@ -32,8 +32,9 @@ const ROUTE_LAYER: LineLayerSpecification = {
     'line-sort-key': ['case', IS_RECOMMENDED, 1, 0],
   },
   paint: {
-    'line-color': ['case', IS_RECOMMENDED, '#2563eb', '#6b7280'],
-    'line-width': ['case', IS_RECOMMENDED, 6, 4],
+    'line-color': ['case', IS_RECOMMENDED, '#d8b26a', '#7c8597'],
+    'line-width': ['case', IS_RECOMMENDED, 6, 3.5],
+    'line-opacity': ['case', IS_RECOMMENDED, 1, 0.75],
   },
 }
 
@@ -44,7 +45,8 @@ const HEATMAP_LAYER: CircleLayerSpecification = {
   source: HEATMAP_SOURCE,
   paint: {
     'circle-color': ['get', 'color'],
-    'circle-opacity': 0.45,
+    'circle-opacity': 0.38,
+    'circle-blur': 0.6,
     'circle-radius': ['interpolate', ['linear'], ['zoom'], 4, 6, 8, 24],
   },
 }
@@ -56,7 +58,7 @@ const CHECKPOINT_LAYER: CircleLayerSpecification = {
   paint: {
     'circle-color': ['get', 'color'],
     'circle-radius': 6,
-    'circle-stroke-color': '#ffffff',
+    'circle-stroke-color': '#0a0d14',
     'circle-stroke-width': 2,
   },
 }

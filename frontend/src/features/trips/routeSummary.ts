@@ -49,3 +49,19 @@ export function levelBreakdown(route: Route): LevelMiles[] {
 export function byRank(routes: Route[]): Route[] {
   return [...routes].sort((a, b) => a.rank - b.rank)
 }
+
+export interface LevelShare {
+  level: LevelName
+  percent: number
+}
+
+/** Share of the route's miles at each non-zero level, in percent (for the stacked bar). */
+export function levelShares(route: Route): LevelShare[] {
+  const { total_miles: total, miles_by_level: byLevel } = route.metrics
+  if (total <= 0) return []
+  const percent = (level: LevelName) => ((byLevel[level] ?? 0) / total) * 100
+  return LEVEL_ORDER.filter((level) => percent(level) > 0).map((level) => ({
+    level,
+    percent: percent(level),
+  }))
+}

@@ -1,7 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import { TripForm } from './features/trips/components/TripForm'
+import { PlannerPage } from './features/trips/components/PlannerPage'
 import { TripPage } from './features/trips/components/TripPage'
+import { AppShell } from './shared/components/AppShell'
 
 const queryClient = new QueryClient()
 
@@ -9,8 +10,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <h1>Weather-Aware Truck Routing</h1>
-        <AppRoutes />
+        <AppShell>
+          <AppRoutes />
+        </AppShell>
       </BrowserRouter>
     </QueryClientProvider>
   )
@@ -19,7 +21,7 @@ export default function App() {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<TripForm />} />
+      <Route path="/" element={<PlannerPage />} />
       <Route path="/trips/:id" element={<TripPage />} />
     </Routes>
   )

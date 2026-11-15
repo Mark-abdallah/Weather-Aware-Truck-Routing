@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { ErrorText } from './ErrorText'
 
 interface FieldProps {
   label: string
@@ -13,7 +14,7 @@ export function Field({ label, error, children }: FieldProps) {
         <span className="field-label">{label}</span>
         {children}
       </label>
-      {error && <p role="alert">{error}</p>}
+      <ErrorText message={error} />
     </div>
   )
 }

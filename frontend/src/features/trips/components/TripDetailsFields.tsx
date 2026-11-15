@@ -7,11 +7,11 @@ type TextKey = 'departureLocal' | 'grossWeight'
 
 export function TripDetailsFields({ form }: { form: TripFormState }) {
   return (
-    <>
+    <div className="form-row form-row-3">
       <DepartureField form={form} />
       <WeightField form={form} />
       <IntervalField form={form} />
-    </>
+    </div>
   )
 }
 
