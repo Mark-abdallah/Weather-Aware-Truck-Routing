@@ -69,10 +69,10 @@ Low (green) to No Travel (purple).
 
 ![Heatmap slider](screenshots/06-heatmap-slider.png)
 
-## 7. Share a trip
+## 7. Plan another trip
 
-Every trip is saved. Copy the browser address (`/trips/<id>`) and send it to anyone. They will see
-the same plan, together with the time it was computed.
+Nothing is saved on the server, and a trip page has no shareable link. Click **Plan another
+trip** to start over.
 
 ## 8. On a phone
 

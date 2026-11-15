@@ -16,7 +16,7 @@ export function renderWithProviders(ui: ReactElement) {
       <MemoryRouter>
         <Routes>
           <Route path="/" element={ui} />
-          <Route path="/trips/:id" element={<p>trip page</p>} />
+          <Route path="/trip" element={<p>trip page</p>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,

@@ -1,18 +1,16 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { formatDateTime } from '../../../shared/format'
 import {
   useRouteSelection,
   type RouteSelection,
 } from '../hooks/useRouteSelection'
-import { useTrip } from '../hooks/useTrip'
+import { usePlannedTrip } from '../hooks/usePlannedTrip'
 import type { MapView } from '../map/tripLayers'
 import type { Heatmap, Trip } from '../types/trip'
 import { HeatmapSlider, RiskLegend } from './HeatmapControls'
 import { RouteCards } from './RouteCards'
 import { TripMap } from './TripMap'
-
-type MessageRole = 'status' | 'alert'
 
 interface SectionProps {
   trip: Trip
@@ -20,20 +18,9 @@ interface SectionProps {
 }
 
 export function TripPage() {
-  const { id = '' } = useParams()
-  const trip = useTrip(id)
-  if (trip.isPending) return <PageMessage role="status" text="Loading trip…" />
-  if (trip.isError)
-    return <PageMessage role="alert" text={trip.error.message} />
-  return <TripView trip={trip.data} />
-}
-
-function PageMessage({ role, text }: { role: MessageRole; text: string }) {
-  return (
-    <p className="page-message card" role={role}>
-      {text}
-    </p>
-  )
+  const trip = usePlannedTrip()
+  if (!trip) return <Navigate to="/" replace />
+  return <TripView trip={trip} />
 }
 
 function TripView({ trip }: { trip: Trip }) {

@@ -1,42 +1,34 @@
-import { screen } from '@testing-library/react'
-import { afterEach, expect, it, vi } from 'vitest'
-import { jsonResponse, renderAt } from '../../../test/renderWithProviders'
+import { render, screen } from '@testing-library/react'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { expect, it, vi } from 'vitest'
 import { makeTrip } from '../../../test/tripFixture'
+import type { Trip } from '../types/trip'
 import { TripPage } from './TripPage'
 
 vi.mock('./TripMap', () => ({ TripMap: () => <div>map</div> }))
 
-afterEach(() => vi.unstubAllGlobals())
-
-function serve(response: Response) {
-  const fetchMock = vi.fn().mockResolvedValue(response)
-  vi.stubGlobal('fetch', fetchMock)
-  return fetchMock
+function renderTrip(trip: Trip | null) {
+  const entry = { pathname: '/trip', state: trip }
+  return render(
+    <MemoryRouter initialEntries={[entry]}>
+      <Routes>
+        <Route path="/" element={<p>planner</p>} />
+        <Route path="/trip" element={<TripPage />} />
+      </Routes>
+    </MemoryRouter>,
+  )
 }
 
-it('loads the trip by id and shows its summary', async () => {
-  const fetchMock = serve(
-    jsonResponse(
-      makeTrip({ plan: { notice: 'Only 2 route(s) available', routes: [] } }),
-    ),
-  )
-  renderAt(<TripPage />, { pattern: '/trips/:id', url: '/trips/trip-1' })
-  expect(screen.getByRole('status')).toHaveTextContent('Loading trip')
-  expect(
-    await screen.findByRole('heading', { name: 'Denver → Kansas City' }),
-  ).toBeInTheDocument()
-  expect(screen.getByText('Only 2 route(s) available')).toBeInTheDocument()
+it('shows the planned trip passed from the planner', () => {
+  const notice = 'Only 2 route(s) available'
+  renderTrip(makeTrip({ plan: { notice, routes: [] } }))
+  const heading = screen.getByRole('heading', { name: 'Denver → Kansas City' })
+  expect(heading).toBeInTheDocument()
+  expect(screen.getByText(notice)).toBeInTheDocument()
   expect(screen.getByText(/^Computed /)).toBeInTheDocument()
-  expect(fetchMock.mock.calls[0][0]).toMatch(/\/api\/trips\/trip-1$/)
 })
 
-it('shows not-found without retrying', async () => {
-  const fetchMock = serve(jsonResponse({ detail: 'Trip not found.' }, 404))
-  renderAt(<TripPage />, {
-    pattern: '/trips/:id',
-    url: '/trips/missing',
-    retry: true,
-  })
-  expect(await screen.findByRole('alert')).toHaveTextContent('Trip not found.')
-  expect(fetchMock).toHaveBeenCalledTimes(1)
+it('goes back to the planner when there is no trip', () => {
+  renderTrip(null)
+  expect(screen.getByText('planner')).toBeInTheDocument()
 })

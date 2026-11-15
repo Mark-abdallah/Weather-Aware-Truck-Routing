@@ -25,7 +25,7 @@ the way, factors in the load weight, and ranks the routes from safest to riskies
 | Interactive map | Detailed map with the start and end points marked. The selected route is shown in teal and the map zooms to it. Click a card or a route line to switch routes. |
 | Checkpoint details | Click any checkpoint to see its ETA, mile marker, wind (with gusts), rain, snow, and what caused its risk level. |
 | Weather heatmap | A risk heatmap around the routes for the next 0–48 hours. Drag the slider to see how conditions change. |
-| Shareable trips | Every trip is saved and has its own link (`/trips/<id>`), showing when it was computed. |
+| Stateless | Nothing is stored. Each plan is computed on request and shown straight away, with the time it was computed. |
 | Responsive | Works on phones, tablets and desktops. |
 
 ### Risk rules
@@ -52,9 +52,8 @@ A checkpoint takes the worst of its wind, rain and snow levels.
 | Python 3.13 | Language |
 | Django 6.1 | Web framework, ORM, migrations |
 | Django REST Framework 3.18 | REST API, serializers, validation |
-| PostgreSQL + psycopg 3 | Database (SQLite is used locally if `DATABASE_URL` is not set) |
 | httpx | HTTP client for HERE and Open-Meteo |
-| dj-database-url, python-dotenv | Configuration from environment variables / `.env` |
+| python-dotenv | Configuration from environment variables / `.env` |
 | django-cors-headers | Allows the frontend to call the API |
 | gunicorn, WhiteNoise | Production server and static files |
 | pytest, pytest-django, respx | Tests (respx mocks external HTTP calls) |
@@ -65,7 +64,7 @@ A checkpoint takes the worst of its wind, rain and snow levels.
 |---|---|
 | React 19 + TypeScript 6 | UI |
 | Vite 8 | Dev server and build |
-| React Router 7 | Pages (`/` and `/trips/:id`) |
+| React Router 7 | Pages (`/` planner and `/trip` result) |
 | TanStack Query 5 | Server state: fetching, caching and mutations |
 | MapLibre GL 6 | Interactive vector map |
 | Vitest + React Testing Library + jsdom | Tests |
@@ -93,7 +92,6 @@ frontend/ (React + TypeScript + Vite)          backend/ (Django + DRF)
     components/ rendering only                                    TripService; ports (Protocols)
     map/        GeoJSON + MapLibre layers          clients/       HERE routing/autosuggest, Open-Meteo,
   src/shared/   http client, Field, formatting                    flexible-polyline decoder, cached fetcher
-                                                   repositories/  the only ORM code (trips, response cache)
                                                    api/           serializers, thin views, error mapping,
                                                                   composition root (dependencies.py)
 ```
@@ -107,16 +105,15 @@ frontend/ (React + TypeScript + Vite)          backend/ (Django + DRF)
   4. fetches the weather in one batched call (retried once),
   5. rates and ranks the routes,
   6. builds the 49-hour heatmap,
-  7. saves the trip and returns `201`.
-- Provider responses are cached in the database: weather for 1 hour, routes and suggestions for
-  24 hours.
+  7. returns the plan with `201` (nothing is saved).
+- There is no database. Provider responses are cached in memory per server process: weather for
+  1 hour, routes and suggestions for 24 hours. The cache is cleared when the server restarts.
 
 ### API
 
 | Method | Path | Result |
 |---|---|---|
-| `POST` | `/api/trips` | `201 {id, computed_at, inputs, plan, heatmap}` |
-| `GET` | `/api/trips/<uuid>` | Saved trip, or `404` |
+| `POST` | `/api/trips` | `201 {computed_at, inputs, plan, heatmap}` |
 | `GET` | `/api/autosuggest?q=` | `[{label, lat, lon}]` |
 | `GET` | `/api/health` | `{"status": "ok"}` |
 
@@ -127,15 +124,14 @@ provider is unavailable. A route is never returned without weather.
 
 ## Running locally
 
-Requirements: Python 3.13, Node 22+, and optionally PostgreSQL.
+Requirements: Python 3.13 and Node 22+. No database is needed.
 
 ```bash
-cp .env.example .env            # set HERE_API_KEY (and DATABASE_URL for Postgres)
+cp .env.example .env            # set HERE_API_KEY
 
 cd backend
 python -m venv .venv && .venv/Scripts/activate   # macOS/Linux: source .venv/bin/activate
 pip install -r requirements-dev.txt
-python manage.py migrate
 python manage.py runserver      # http://localhost:8000
 
 cd ../frontend
@@ -148,23 +144,21 @@ The frontend calls `http://localhost:8000` unless `VITE_API_URL` is set.
 ## Tests and checks
 
 ```bash
-cd backend  && pytest && ruff check . && python manage.py makemigrations --check
+cd backend  && pytest && ruff check .
 cd frontend && npm test && npm run lint && npm run build
 ```
 
 ## Deployment (Render)
 
-`render.yaml` is a Render Blueprint. It creates a Postgres database, the Django API (gunicorn, with
-migrations run at start) and the React static site.
+`render.yaml` is a Render Blueprint. It creates the Django API (gunicorn) and the React static site.
 
 After the first deploy:
 1. Set `HERE_API_KEY` and `CORS_ALLOWED_ORIGINS` on `spotter-api`.
 2. Set `VITE_API_URL` on `spotter-web`, then redeploy the site.
 
-On the free plan, the API sleeps when idle (the first request can take about 50 seconds), and the
-free database expires after about 30 days.
+On the free plan, the API sleeps when idle, so the first request can take about 50 seconds.
 
 ## Not included
 
-Authentication, multiple stops, a custom routing engine, live-traffic re-routing, notifications,
+Authentication, saved or shareable trips, multiple stops, a custom routing engine, live-traffic re-routing, notifications,
 and a native mobile app.

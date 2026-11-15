@@ -16,7 +16,6 @@ from trips.services.ports import (
 from trips.services.trip_planner import TripPlanner
 from trips.services.trip_service import TripService
 from trips.tests.services.fakes import FakeRouting, FakeWeather, calm, make_route
-from trips.tests.services.test_trip_service import FakeStore
 
 WEATHER_DOWN = 2
 
@@ -32,46 +31,36 @@ def trip_body(**overrides: Any) -> dict[str, Any]:
     return body | overrides
 
 
-def use_service(monkeypatch: pytest.MonkeyPatch, routing: Any, weather: Any) -> FakeStore:
-    store = FakeStore()
-    service = TripService(TripPlanner(routing, weather), HeatmapService(weather), store)
+def use_service(monkeypatch: pytest.MonkeyPatch, routing: Any, weather: Any) -> None:
+    service = TripService(TripPlanner(routing, weather), HeatmapService(weather))
     monkeypatch.setattr(dependencies, "trip_service", lambda: service)
-    return store
 
 
 @pytest.fixture
-def store(monkeypatch: pytest.MonkeyPatch) -> FakeStore:
+def planner(monkeypatch: pytest.MonkeyPatch) -> None:
     weather = FakeWeather(lambda point, when: calm())
-    return use_service(monkeypatch, FakeRouting([make_route("a", -100.0)]), weather)
+    use_service(monkeypatch, FakeRouting([make_route("a", -100.0)]), weather)
 
 
 def post(body: dict[str, Any]) -> Any:
     return APIClient().post("/api/trips", body, format="json")
 
 
-def test_create_then_fetch_trip(store: FakeStore) -> None:
+def test_create_returns_the_planned_trip(planner: None) -> None:
     created = post(trip_body())
     assert created.status_code == 201
-    fetched = APIClient().get(f"/api/trips/{created.json()['id']}")
-    assert fetched.status_code == 200
-    body = fetched.json()
-    assert body == created.json()
-    assert set(body) == {"id", "computed_at", "inputs", "plan", "heatmap"}
+    body = created.json()
+    assert set(body) == {"computed_at", "inputs", "plan", "heatmap"}
     assert body["inputs"]["origin"]["label"] == "A"
 
 
-def test_departure_is_stored_in_utc(store: FakeStore) -> None:
+def test_departure_is_returned_in_utc(planner: None) -> None:
     departure = "2026-01-01T07:00:00-05:00"
     now = datetime(2026, 1, 1, 12, tzinfo=UTC)
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(timezone, "now", lambda: now)
         body = post(trip_body(departure=departure)).json()
     assert body["inputs"]["departure"] == "2026-01-01T12:00:00Z"
-
-
-def test_unknown_trip_is_404(store: FakeStore) -> None:
-    response = APIClient().get("/api/trips/00000000-0000-0000-0000-000000000000")
-    assert response.status_code == 404
 
 
 @pytest.mark.parametrize(
@@ -88,13 +77,12 @@ def test_unknown_trip_is_404(store: FakeStore) -> None:
         {"destination": {"label": "B", "lat": 40.0, "lon": -100.0}},
     ],
 )
-def test_invalid_input_is_400(store: FakeStore, overrides: dict[str, Any]) -> None:
+def test_invalid_input_is_400(planner: None, overrides: dict[str, Any]) -> None:
     response = post(trip_body(**overrides))
     assert response.status_code == 400
-    assert store.trips == {}
 
 
-def test_interval_defaults_to_25(store: FakeStore) -> None:
+def test_interval_defaults_to_25(planner: None) -> None:
     body = trip_body()
     del body["interval_mi"]
     assert post(body).json()["inputs"]["interval_mi"] == 25
@@ -105,13 +93,12 @@ def test_no_routes_is_422(monkeypatch: pytest.MonkeyPatch) -> None:
     assert post(trip_body()).status_code == 422
 
 
-def test_weather_failure_is_502_and_nothing_stored(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_weather_failure_is_502(monkeypatch: pytest.MonkeyPatch) -> None:
     weather = FakeWeather(lambda point, when: calm(), failures_before_success=WEATHER_DOWN)
-    store = use_service(monkeypatch, FakeRouting([make_route("a", -100.0)]), weather)
+    use_service(monkeypatch, FakeRouting([make_route("a", -100.0)]), weather)
     response = post(trip_body())
     assert response.status_code == 502
     assert response.json() == {"detail": "Weather service unavailable, try again"}
-    assert store.trips == {}
 
 
 class FailingRouting:

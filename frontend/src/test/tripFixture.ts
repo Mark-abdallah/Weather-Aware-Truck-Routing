@@ -35,7 +35,6 @@ const BASE_ROUTE: Route = {
 }
 
 const BASE_TRIP: Trip = {
-  id: 'trip-1',
   computed_at: '2026-01-01T10:00:00+00:00',
   inputs: {
     origin: { label: 'Denver', lat: 40, lon: -100 },

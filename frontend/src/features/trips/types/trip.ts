@@ -58,7 +58,6 @@ export interface Heatmap {
 }
 
 export interface Trip {
-  id: string
   computed_at: string
   inputs: TripInput
   plan: { notice: string | null; routes: Route[] }

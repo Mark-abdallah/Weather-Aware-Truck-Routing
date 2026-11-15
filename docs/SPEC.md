@@ -18,7 +18,7 @@ React + Django app that helps a truck driver choose the safest route based on we
 | Geocoding | HERE Geocoding & Search |
 | Weather | **Open-Meteo** hourly forecast (no key), batch multi-location requests |
 | Map | **MapLibre GL** with free vector tiles |
-| Hosting | **Render** (`render.yaml`: Django web service, managed Postgres, React static site) |
+| Hosting | **Render** (`render.yaml`: Django web service and React static site; no database) |
 
 If HERE returns fewer than 3 routes, show what was returned and tell the user.
 
@@ -67,9 +67,9 @@ Routes with any No Travel miles are still shown, with a clear warning.
 - Route summary cards: distance, duration, miles per level, average risk, recommended badge, No Travel warning.
 - **Heatmap**: a grid of points covering the corridor around all routes, coloured by combined risk level, with a **0–48 h slider** (hourly steps from departure). Fetch all 49 hours at once and switch hours on the client only, so the slider stays smooth.
 
-## Persistence (PostgreSQL)
-- `Trip`: the inputs and computed results (JSON). Each trip has a shareable URL `/trips/<id>`.
-- Cache for HERE and Open-Meteo responses, with an expiry time (weather about 1 h, routes about 24 h).
+## Persistence
+- None. The app is stateless: `POST /api/trips` computes and returns the plan; nothing is stored and there are no shareable trip links.
+- HERE and Open-Meteo responses are cached in memory per server process, with an expiry time (weather about 1 h, routes about 24 h).
 
 ## Additional confirmed decisions
 - **Weight** = gross vehicle weight in lb, labelled "Gross weight (lb)", must be >0 and ≤80,000. Sent to HERE converted to kg.
@@ -78,8 +78,7 @@ Routes with any No Travel miles are still shown, with a clear warning.
 - **Heatmap**: grid ~15 mi spacing, points within 30 mi of any route, cap ~600 points; load-aware (same classifier as checkpoints); hour h = departure + h at every point.
 - **Cause tie-break**: store all tied causes; show them all in the popup.
 - **Tiles**: OpenFreeMap (no key). HERE key stays server-side; autosuggest proxied through Django.
-- **Trip id**: UUID. Shared trip shows stored snapshot with "computed at" timestamp. Trips don't expire.
-- **Cache**: expired rows purged lazily on read.
+- **Cache**: expired entries purged on read.
 
 ## Out of scope
 Auth/users, multiple stops, a self-built routing engine, real-time traffic re-routing, notifications, mobile app.

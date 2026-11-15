@@ -4,6 +4,7 @@ import {
   jsonResponse,
   renderWithProviders,
 } from '../../../test/renderWithProviders'
+import { makeTrip } from '../../../test/tripFixture'
 import { TripForm } from './TripForm'
 
 const DENVER = { label: 'Denver, CO, United States', lat: 39.74, lon: -104.99 }
@@ -15,7 +16,7 @@ function respond(url: string, init?: RequestInit): Response {
     const query = new URL(url).searchParams.get('q') ?? ''
     return jsonResponse(query.startsWith('Den') ? [DENVER] : [KC])
   }
-  if (init?.method === 'POST') return jsonResponse({ id: 'trip-1' }, 201)
+  if (init?.method === 'POST') return jsonResponse(makeTrip(), 201)
   return jsonResponse({ detail: 'unexpected' }, 500)
 }
 
