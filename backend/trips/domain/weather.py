@@ -13,3 +13,10 @@ class WeatherSample:
 
 def cm_to_inches(cm: float) -> float:
     return cm / CENTIMETERS_PER_INCH
+
+
+MILLIMETERS_PER_INCH = 25.4
+
+
+def mm_to_inches(mm: float) -> float:
+    return mm / MILLIMETERS_PER_INCH

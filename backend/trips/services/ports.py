@@ -18,6 +18,10 @@ class RoutingUnavailableError(Exception):
     """The routing provider failed or returned unusable data."""
 
 
+class SuggestionsUnavailableError(Exception):
+    """The address suggestion provider failed or returned unusable data."""
+
+
 class NoRoutesFoundError(Exception):
     """The routing provider found no route between the two points."""
 
@@ -35,6 +39,12 @@ class RouteData:
     anchors: tuple[TimeAnchor, ...]
     length_miles: float
     duration_s: float
+
+
+@dataclass(frozen=True)
+class Suggestion:
+    label: str
+    position: LatLon
 
 
 @dataclass(frozen=True)
@@ -62,3 +72,7 @@ class WeatherClient(Protocol):
     ) -> list[HourlyForecast]:
         """One forecast per point, in the same order as points."""
         ...
+
+
+class AddressSuggester(Protocol):
+    def suggest(self, query: str) -> list[Suggestion]: ...
