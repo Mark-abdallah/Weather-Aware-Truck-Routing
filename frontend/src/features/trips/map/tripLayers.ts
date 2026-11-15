@@ -10,6 +10,7 @@ import {
   type PaddingOptions,
 } from 'maplibre-gl'
 import type { FeatureCollection } from 'geojson'
+import './mapWorker'
 import type { Route, Trip } from '../types/trip'
 import { checkpointPopupContent } from './checkpointPopup'
 import { heatmapCollection } from './heatmapGeoJson'
