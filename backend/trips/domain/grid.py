@@ -118,7 +118,6 @@ def _anchors(routes: Sequence[Sequence[LatLon]], config: GridConfig) -> list[Lat
 
 
 def corridor_grid(routes: Sequence[Sequence[LatLon]], config: GridConfig) -> list[LatLon]:
-    """Lattice points within buffer_mi of any route, coarsened until at most max_points."""
     anchors = _anchors(routes, config)
     if not anchors:
         return []

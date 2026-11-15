@@ -1,7 +1,5 @@
 import type { IntervalMiles, Place, TripInput } from './types/trip'
 
-/** Trip form values, rules and conversion (mirrors the backend rules in docs/SPEC.md). */
-
 export const MAX_GROSS_WEIGHT_LB = 80_000
 export const INTERVAL_OPTIONS: readonly IntervalMiles[] = [10, 25, 50]
 export const DEFAULT_INTERVAL: IntervalMiles = 25
@@ -33,7 +31,6 @@ export function initialValues(now: Date): TripFormValues {
   }
 }
 
-/** "YYYY-MM-DDTHH:mm" in the browser's time zone, as <input type="datetime-local"> expects. */
 export function toLocalInputValue(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, '0')
   const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
@@ -84,7 +81,6 @@ function weightError(grossWeight: string): string | undefined {
   return undefined
 }
 
-/** Call only after validateTripForm returned no errors. */
 export function toTripInput(values: TripFormValues): TripInput {
   if (!values.origin || !values.destination)
     throw new Error('Places are required')
@@ -97,7 +93,6 @@ export function toTripInput(values: TripFormValues): TripInput {
   }
 }
 
-/** Validate now; call onValid with the API input only when there are no errors. */
 export function submitIfValid(
   values: TripFormValues,
   onValid: (input: TripInput) => void,

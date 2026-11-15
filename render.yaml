@@ -1,7 +1,3 @@
-# Render Blueprint: Django API + managed Postgres + React static site.
-# After the first deploy, set the values marked `sync: false` in the Render dashboard:
-#   spotter-api: HERE_API_KEY, CORS_ALLOWED_ORIGINS (the static site URL, e.g. https://spotter-web.onrender.com)
-#   spotter-web: VITE_API_URL (the API URL, e.g. https://spotter-api.onrender.com), then redeploy the site.
 
 databases:
   - name: spotter-db
@@ -16,9 +12,6 @@ services:
     plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    # Migrations run at start because pre-deploy commands are not available on the free plan.
-    # Threads keep health checks and autosuggest responsive while a trip is being planned.
-    # A trip makes one HERE call plus several sequential Open-Meteo calls, so allow 120 s.
     startCommand: python manage.py migrate --noinput && gunicorn config.wsgi --bind 0.0.0.0:$PORT --timeout 120 --workers 2 --threads 4
     healthCheckPath: /api/health
     envVars:
@@ -45,7 +38,6 @@ services:
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
-    # Client-side routing: serve index.html for /trips/<id> and any other path.
     routes:
       - type: rewrite
         source: /*

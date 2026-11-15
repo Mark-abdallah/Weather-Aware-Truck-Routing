@@ -1,5 +1,3 @@
-"""Composition root: wires real clients, cache and repositories into the services."""
-
 from functools import cache
 
 import httpx

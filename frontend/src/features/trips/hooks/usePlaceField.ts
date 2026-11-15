@@ -4,7 +4,6 @@ import { useSuggestions } from './useSuggestions'
 
 type OnPlaceChange = (place: Place | null) => void
 
-/** Free text plus the chosen suggestion; typing clears the choice. */
 export function usePlaceField(onChange: OnPlaceChange) {
   const choice = usePlaceChoice(onChange)
   const suggestions = useSuggestions(choice.text, !choice.chosen)

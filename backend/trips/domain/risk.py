@@ -12,8 +12,6 @@ class RiskLevel(IntEnum):
 
 @dataclass(frozen=True)
 class Thresholds:
-    """Lower bounds (inclusive) of Moderate, High and Severe, plus the No Travel limit."""
-
     moderate: float
     high: float
     severe: float

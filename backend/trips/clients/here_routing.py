@@ -1,5 +1,3 @@
-"""HERE Routing v8 client: truck routes with 2 alternatives, time anchors from spans."""
-
 from collections.abc import Sequence
 from datetime import timedelta
 from typing import Any
@@ -34,7 +32,6 @@ class HereRoutingClient:
 
 
 def _parse_routes(payload: Any) -> list[RouteData]:
-    """Routes too short to sample (under 2 points) are dropped as unusable."""
     try:
         routes = [_parse_route(route) for route in payload.get("routes", [])]
         return [route for route in routes if len(route.polyline) >= MIN_POLYLINE_POINTS]
@@ -69,7 +66,6 @@ def _parse_route(route: dict[str, Any]) -> RouteData:
 
 
 def _join_sections(sections: Sequence[dict[str, Any]]) -> tuple[list[LatLon], list[TimeAnchor]]:
-    """Concatenate section polylines; each span start (polyline offset) becomes a time anchor."""
     polyline: list[LatLon] = []
     timings: list[tuple[int, float]] = []
     elapsed_s = 0.0
@@ -83,6 +79,5 @@ def _join_sections(sections: Sequence[dict[str, Any]]) -> tuple[list[LatLon], li
 
 
 def _anchors(polyline: list[LatLon], timings: list[tuple[int, float]]) -> list[TimeAnchor]:
-    """Anchor miles come from the decoded polyline, matching how checkpoints measure miles."""
     miles = cumulative_miles(polyline)
     return [TimeAnchor(miles[index], seconds) for index, seconds in timings]

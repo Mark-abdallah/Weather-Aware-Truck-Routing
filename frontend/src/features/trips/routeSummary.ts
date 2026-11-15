@@ -34,7 +34,6 @@ export function formatRisk(averageRisk: number): string {
   return averageRisk.toFixed(RISK_DECIMALS)
 }
 
-/** Levels that cover any miles, lowest risk first. */
 export function levelBreakdown(route: Route): LevelMiles[] {
   const byLevel = route.metrics.miles_by_level
   return LEVEL_ORDER.filter((level) => (byLevel[level] ?? 0) > 0).map(
@@ -55,7 +54,6 @@ export interface LevelShare {
   percent: number
 }
 
-/** Share of the route's miles at each non-zero level, in percent (for the stacked bar). */
 export function levelShares(route: Route): LevelShare[] {
   const { total_miles: total, miles_by_level: byLevel } = route.metrics
   if (total <= 0) return []

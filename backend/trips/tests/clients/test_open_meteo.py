@@ -14,7 +14,7 @@ from trips.tests.clients.fakes import make_fetcher
 
 START = datetime(2026, 1, 1, 10, 30, tzinfo=UTC)
 END = datetime(2026, 1, 1, 12, 15, tzinfo=UTC)
-HOUR_10 = 1767261600  # 2026-01-01T10:00Z
+HOUR_10 = 1767261600
 
 
 def location(rain_mm: float | None = 2.54) -> dict[str, Any]:

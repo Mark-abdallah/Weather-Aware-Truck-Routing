@@ -1,5 +1,3 @@
-"""HERE Autosuggest client: address suggestions that carry coordinates."""
-
 from datetime import timedelta
 from typing import Any
 
@@ -10,7 +8,6 @@ from trips.services.ports import Suggestion, SuggestionsUnavailableError
 AUTOSUGGEST_URL = "https://autosuggest.search.hereapi.com/v1/autosuggest"
 SUGGESTION_CACHE_TTL = timedelta(hours=24)
 SUGGESTION_LIMIT = 5
-# HERE requires a search center; results are biased (not restricted) towards the contiguous US.
 SEARCH_CENTER = "39.8283,-98.5795"
 MALFORMED_ERRORS = (KeyError, TypeError, AttributeError)
 

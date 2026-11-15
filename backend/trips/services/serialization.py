@@ -1,22 +1,3 @@
-"""JSON-serializable dicts for the API contract (snake_case keys).
-
-TripPlan:
-  {"notice": str | null, "routes": [Route, ...]}   (routes ordered by rank)
-Route:
-  {"route_id", "rank", "recommended", "has_no_travel", "length_miles",
-   "duration_s", "polyline": [[lat, lon], ...],
-   "metrics": {"total_miles", "average_risk", "miles_by_level": {level_name: miles}},
-   "checkpoints": [Checkpoint, ...]}
-Checkpoint:
-  {"lat", "lon", "mile", "eta_utc" (ISO 8601), "wind_mph", "gust_mph",
-   "rain_in_hr", "snow_in_hr", "level": int, "level_name": str,
-   "causes": ["wind" | "rain" | "snow"], "load_rule_applied": bool}
-Heatmap:
-  {"points": [[lat, lon], ...], "hours": [ISO 8601, ...],
-   "levels": [[int per point] per hour]}
-Level names are lower-case RiskLevel names, e.g. "no_travel".
-"""
-
 from typing import Any
 
 from trips.domain.geometry import LatLon

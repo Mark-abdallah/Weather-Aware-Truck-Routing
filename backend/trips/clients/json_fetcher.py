@@ -1,5 +1,3 @@
-"""Cached JSON GET requests shared by the provider clients."""
-
 import hashlib
 import json
 from collections.abc import Callable, Mapping
@@ -21,7 +19,6 @@ class JsonRequest:
 
 
 def cache_key(request: JsonRequest) -> str:
-    """Hash of url + params; secrets (API keys) are never part of the key."""
     encoded = json.dumps([request.url, sorted(request.params.items())])
     return hashlib.sha256(encoded.encode()).hexdigest()
 
@@ -33,7 +30,6 @@ class JsonFetcher:
         self._error = error
 
     def get[Result](self, request: JsonRequest, parse: Callable[[Any], Result]) -> Result:
-        """Parse the cached or downloaded payload; only payloads that parse are cached."""
         key = cache_key(request)
         cached = self._cache.get(key)
         if cached is not None:
@@ -49,5 +45,4 @@ class JsonFetcher:
             response.raise_for_status()
             return response.json()
         except (httpx.HTTPError, ValueError):
-            # "from None": the original exception text contains the URL with the API key.
             raise self._error(f"Request to {request.url} failed") from None

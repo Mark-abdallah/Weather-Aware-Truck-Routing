@@ -8,8 +8,6 @@ from trips.services.trip_planner import TripPlanner, TripRequest
 
 
 class TripService:
-    """Plans a trip, builds its heatmap and stores the snapshot."""
-
     def __init__(self, planner: TripPlanner, heatmap: HeatmapService, store: TripStore) -> None:
         self._planner = planner
         self._heatmap = heatmap

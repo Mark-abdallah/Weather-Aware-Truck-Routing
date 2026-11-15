@@ -6,11 +6,10 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 interface RenderAtOptions {
   pattern: string
   url: string
-  /** Keep each hook's own retry rule instead of disabling retries. */
+
   retry?: boolean
 }
 
-/** Renders `ui` at "/" with a fresh query client; "/trips/:id" shows "trip page". */
 export function renderWithProviders(ui: ReactElement) {
   return render(
     <QueryClientProvider client={testQueryClient(false)}>
@@ -24,7 +23,6 @@ export function renderWithProviders(ui: ReactElement) {
   )
 }
 
-/** Renders `ui` for route `pattern` with the browser at `url`. */
 export function renderAt(
   ui: ReactElement,
   { pattern, url, retry = false }: RenderAtOptions,

@@ -13,7 +13,6 @@ import type { Trip } from '../types/trip'
 type ViewRef = RefObject<MapView>
 type MapRef = RefObject<MapLibreMap | null>
 
-/** Owns the MapLibre map; hour and selection changes update it without re-creating it. */
 export function useTripMap(trip: Trip, view: MapView) {
   const viewRef = useRef(view)
   useEffect(() => {
@@ -39,7 +38,6 @@ function useMapView(
   }, [mapRef, trip.plan.routes, selectedId])
 }
 
-/** Creates the map once per trip (the trip object is stable; refs never change). */
 function useMapInstance(trip: Trip, viewRef: ViewRef) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)

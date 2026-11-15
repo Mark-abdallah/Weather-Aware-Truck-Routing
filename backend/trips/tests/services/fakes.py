@@ -45,13 +45,6 @@ class FakeRouting:
 
 
 class FakeWeather:
-    """Returns hourly forecasts for exactly [start, end]; records every call.
-
-    Faults: `failures_before_success` raises WeatherUnavailableError first;
-    `hours_dropped` truncates the window's end; `forecast_count_delta` adds or
-    removes forecasts relative to the points requested.
-    """
-
     def __init__(
         self,
         sample_at: SampleFn,

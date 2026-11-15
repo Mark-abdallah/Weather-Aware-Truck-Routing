@@ -6,7 +6,6 @@ const MAX_RETRIES = 2
 const CLIENT_ERROR_MIN = 400
 const CLIENT_ERROR_MAX = 499
 
-/** A stored trip never changes, so it is cached forever; 4xx errors are not retried. */
 export function useTrip(id: string) {
   return useQuery({
     queryKey: ['trip', id],

@@ -1,5 +1,3 @@
-"""Validated, retried weather fetching shared by the application services."""
-
 from collections.abc import Sequence
 from datetime import datetime
 
@@ -14,7 +12,6 @@ from trips.services.retry import retry_once
 
 
 def fetch_forecasts(weather: WeatherClient, query: WeatherQuery) -> list[HourlyForecast]:
-    """Fetch one validated forecast per point; retry once on WeatherUnavailableError."""
     return retry_once(lambda: _fetch_and_validate(weather, query))
 
 

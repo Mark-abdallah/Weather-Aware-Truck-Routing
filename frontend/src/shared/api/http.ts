@@ -38,7 +38,6 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   return body as T
 }
 
-/** First message in a DRF error body: {"detail": ...} or nested field errors. */
 export function errorMessage(body: unknown): string {
   return firstMessage(body) ?? GENERIC_ERROR
 }

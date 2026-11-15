@@ -5,8 +5,6 @@ import type {
   SymbolLayerSpecification,
 } from 'maplibre-gl'
 
-/** Static MapLibre source/layer definitions; selection-dependent paint is set in tripLayers. */
-
 export const SOURCES = {
   heatmap: 'heatmap',
   routes: 'routes',
@@ -120,7 +118,6 @@ export const ENDPOINT_LABEL_LAYER: SymbolLayerSpecification = {
   },
 }
 
-/** Bottom-to-top drawing order. */
 export const LAYER_ORDER = [
   HEATMAP_LAYER,
   ROUTE_CASING_LAYER,

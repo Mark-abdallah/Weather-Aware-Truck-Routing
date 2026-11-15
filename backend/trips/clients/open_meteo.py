@@ -1,5 +1,3 @@
-"""Open-Meteo hourly forecast client: batched multi-location requests."""
-
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from itertools import batched
@@ -79,7 +77,6 @@ def _parse_location(location: dict[str, Any]) -> HourlyForecast:
 
 
 def _sample(row: tuple[float | None, ...]) -> WeatherSample:
-    """Row order follows HOURLY_VARIABLES: wind mph, gust mph, rain mm, snowfall cm."""
     if any(value is None for value in row):
         raise ValueError("Weather row has missing values")
     wind_mph, gust_mph, rain_mm, snow_cm = row

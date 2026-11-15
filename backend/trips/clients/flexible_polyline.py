@@ -1,5 +1,3 @@
-"""Decoder for HERE's flexible polyline format (third dimension, if present, is ignored)."""
-
 from trips.domain.geometry import LatLon
 
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"

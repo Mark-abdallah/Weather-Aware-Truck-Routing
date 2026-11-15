@@ -9,7 +9,7 @@ from trips.domain.geometry import LatLon, cumulative_miles
 from trips.services.ports import RouteRequest, RoutingUnavailableError
 from trips.tests.clients.fakes import make_fetcher
 
-POLYLINE = "BFoz5xJ67i1B1B7PzIhaxL7Y"  # 4 points
+POLYLINE = "BFoz5xJ67i1B1B7PzIhaxL7Y"
 ORIGIN = LatLon(50.10228, 8.69821)
 DESTINATION = LatLon(50.09878, 8.68752)
 REQUEST = RouteRequest(datetime(2026, 1, 1, 12, tzinfo=UTC), gross_weight_lb=40000)

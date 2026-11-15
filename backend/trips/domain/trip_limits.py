@@ -1,5 +1,3 @@
-"""Allowed trip inputs (confirmed in docs/SPEC.md)."""
-
 from datetime import datetime, timedelta
 
 MAX_GROSS_WEIGHT_LB = 80_000

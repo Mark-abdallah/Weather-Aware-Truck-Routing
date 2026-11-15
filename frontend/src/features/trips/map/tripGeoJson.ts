@@ -2,7 +2,6 @@ import type { Feature, FeatureCollection } from 'geojson'
 import type { Checkpoint, Place, Route, TripInput } from '../types/trip'
 import { LEVEL_COLORS } from '../risk'
 
-/** Backend points are [lat, lon]; GeoJSON and MapLibre use [lon, lat]. */
 export type LonLat = [number, number]
 
 export function toLonLat([lat, lon]: [number, number]): LonLat {
@@ -59,7 +58,6 @@ function checkpointFeature(
   return { type: 'Feature', geometry, properties }
 }
 
-/** Origin and destination pins with their names. */
 export function endpointsCollection(inputs: TripInput): FeatureCollection {
   const features = [
     endpointFeature(inputs.origin, 'origin'),
@@ -79,7 +77,6 @@ function endpointFeature(
   return { type: 'Feature', geometry, properties: { kind, label: place.label } }
 }
 
-/** [[west, south], [east, north]] covering every route point (a loop: polylines can be huge). */
 export function routeBounds(routes: Route[]): [LonLat, LonLat] {
   let [west, south, east, north] = [Infinity, Infinity, -Infinity, -Infinity]
   for (const [lat, lon] of routes.flatMap((route) => route.polyline)) {

@@ -1,5 +1,3 @@
-"""Assess the forecast hour nearest to a moment in time."""
-
 from dataclasses import dataclass
 from datetime import datetime
 

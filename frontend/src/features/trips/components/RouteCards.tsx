@@ -56,7 +56,6 @@ function CardBody({ route }: { route: Route }) {
   )
 }
 
-/** Stretched over the whole card so any click on it selects the route. */
 function SelectButton({ route, selection }: CardProps) {
   const button = {
     'aria-pressed': route.route_id === selection.selectedId,

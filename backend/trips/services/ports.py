@@ -1,5 +1,3 @@
-"""Ports (interfaces) and DTOs the application services depend on."""
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -12,19 +10,19 @@ from trips.domain.weather import WeatherSample
 
 
 class WeatherUnavailableError(Exception):
-    """The weather provider failed or returned unusable data."""
+    pass
 
 
 class RoutingUnavailableError(Exception):
-    """The routing provider failed or returned unusable data."""
+    pass
 
 
 class SuggestionsUnavailableError(Exception):
-    """The address suggestion provider failed or returned unusable data."""
+    pass
 
 
 class NoRoutesFoundError(Exception):
-    """The routing provider found no route between the two points."""
+    pass
 
 
 @dataclass(frozen=True)
@@ -70,9 +68,7 @@ class RoutingClient(Protocol):
 class WeatherClient(Protocol):
     def fetch_hourly(
         self, points: Sequence[LatLon], start: datetime, end: datetime
-    ) -> list[HourlyForecast]:
-        """One forecast per point, in the same order as points."""
-        ...
+    ) -> list[HourlyForecast]: ...
 
 
 class AddressSuggester(Protocol):

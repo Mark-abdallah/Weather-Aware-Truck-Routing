@@ -65,7 +65,6 @@ export function createTripMap(
   return map
 }
 
-/** Adds every layer once the style loads; wires popups, route clicks and pointer cursors. */
 export function bindTripLayers(
   map: MapLibreMap,
   trip: Trip,
@@ -101,7 +100,6 @@ function addGeoJson(
   map.addSource(id, { type: 'geojson', data })
 }
 
-/** Swaps the heatmap hour; a no-op until the layers exist (load reads the latest view). */
 export function setHeatmapData(
   map: MapLibreMap,
   data: FeatureCollection,
@@ -109,7 +107,6 @@ export function setHeatmapData(
   map.getSource<GeoJSONSource>(SOURCES.heatmap)?.setData(data)
 }
 
-/** Highlights the selected route, shows only its checkpoints and zooms to it. */
 export function applySelection(
   map: MapLibreMap,
   routes: Route[],

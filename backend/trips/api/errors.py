@@ -1,5 +1,3 @@
-"""Maps provider/domain exceptions to HTTP responses (DRF EXCEPTION_HANDLER)."""
-
 from typing import Any
 
 from rest_framework import status

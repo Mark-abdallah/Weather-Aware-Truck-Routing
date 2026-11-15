@@ -26,7 +26,6 @@ function riskLine({ level_name, causes }: Checkpoint): string {
     : `Risk: ${label}`
 }
 
-/** Built with textContent (never innerHTML) so data cannot inject markup. */
 export function checkpointPopupContent(checkpoint: Checkpoint): HTMLElement {
   const container = document.createElement('div')
   container.append(

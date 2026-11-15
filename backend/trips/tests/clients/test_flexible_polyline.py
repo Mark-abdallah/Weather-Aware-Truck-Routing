@@ -3,7 +3,6 @@ import pytest
 from trips.clients.flexible_polyline import decode
 from trips.domain.geometry import LatLon
 
-# Reference vectors from HERE's flexible-polyline repository.
 EXPECTED = [
     LatLon(50.10228, 8.69821),
     LatLon(50.10201, 8.69567),

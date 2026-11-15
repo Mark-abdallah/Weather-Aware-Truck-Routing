@@ -8,8 +8,6 @@ from trips.models import CachedResponse
 
 
 class DatabaseResponseCache:
-    """ResponseCache backed by CachedResponse; expired rows are purged on each read."""
-
     def __init__(self, clock: Callable[[], datetime] = timezone.now) -> None:
         self._clock = clock
 

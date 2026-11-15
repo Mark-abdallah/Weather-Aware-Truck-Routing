@@ -4,7 +4,6 @@ import { LEVEL_ORDER } from '../routeSummary'
 import type { Heatmap } from '../types/trip'
 import { toLonLat } from './tripGeoJson'
 
-/** Grid points coloured by their risk level at the given hour index. */
 export function heatmapCollection(
   heatmap: Heatmap,
   hourIndex: number,

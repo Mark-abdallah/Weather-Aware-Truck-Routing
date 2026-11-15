@@ -5,11 +5,6 @@ MAX_DISTANCE_OUTSIDE_RANGE = timedelta(hours=1)
 
 
 def nearest_hour_index(eta: datetime, hourly_times: Sequence[datetime]) -> int:
-    """Index of the forecast hour closest to the ETA.
-
-    An exact half-hour tie rounds to the LATER hour. This is only a rule to keep
-    the result deterministic; it does not claim the later hour is more conservative.
-    """
     if not hourly_times:
         raise ValueError("hourly_times must not be empty")
     _require_aware(eta, hourly_times)

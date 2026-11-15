@@ -29,8 +29,6 @@ class FiniteFloatField(serializers.FloatField):
 
 
 class OffsetDateTimeField(serializers.DateTimeField):
-    """Requires an explicit UTC offset and normalises to UTC."""
-
     def enforce_timezone(self, value: datetime) -> datetime:
         if timezone.is_naive(value):
             raise serializers.ValidationError("Include a UTC offset.")
