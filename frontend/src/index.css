@@ -14,3 +14,41 @@ body {
   height: 60vh;
   min-height: 320px;
 }
+
+.route-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.route-card {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.badge {
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.85em;
+}
+
+.warning {
+  color: #7e22ce;
+  font-weight: 600;
+}
+
+.level-list {
+  list-style: none;
+  padding: 0;
+}
+
+.level-list li {
+  border-left: 6px solid transparent;
+  padding-left: 8px;
+  margin: 4px 0;
+}
