@@ -1,13 +1,23 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { formatDateTime } from '../../../shared/format'
+import {
+  useRouteSelection,
+  type RouteSelection,
+} from '../hooks/useRouteSelection'
 import { useTrip } from '../hooks/useTrip'
+import type { MapView } from '../map/tripLayers'
 import type { Heatmap, Trip } from '../types/trip'
 import { HeatmapSlider, RiskLegend } from './HeatmapControls'
 import { RouteCards } from './RouteCards'
 import { TripMap } from './TripMap'
 
 type MessageRole = 'status' | 'alert'
+
+interface SectionProps {
+  trip: Trip
+  selection: RouteSelection
+}
 
 export function TripPage() {
   const { id = '' } = useParams()
@@ -27,21 +37,23 @@ function PageMessage({ role, text }: { role: MessageRole; text: string }) {
 }
 
 function TripView({ trip }: { trip: Trip }) {
+  const selection = useRouteSelection(trip.plan.routes)
   return (
     <section className="trip" aria-label="Trip">
       <TripHeader trip={trip} />
       <div className="trip-grid">
-        <TripMapSection trip={trip} />
-        <RoutePanel trip={trip} />
+        <TripMapSection trip={trip} selection={selection} />
+        <RoutePanel trip={trip} selection={selection} />
       </div>
     </section>
   )
 }
 
-function RoutePanel({ trip }: { trip: Trip }) {
+function RoutePanel({ trip, selection }: SectionProps) {
   return (
-    <aside className="route-panel">
-      <RouteCards routes={trip.plan.routes} />
+    <aside className="route-panel" aria-label="Route options">
+      <p className="panel-hint">Select a route to view it on the map</p>
+      <RouteCards routes={trip.plan.routes} selection={selection} />
     </aside>
   )
 }
@@ -81,16 +93,23 @@ function TripMeta({ trip }: { trip: Trip }) {
   )
 }
 
-function TripMapSection({ trip }: { trip: Trip }) {
+function TripMapSection({ trip, selection }: SectionProps) {
   const [hourIndex, setHourIndex] = useState(0)
-  const { heatmap, plan } = trip
-  const hour = { hourIndex, onChange: setHourIndex }
+  const overlay = { heatmap: trip.heatmap, hourIndex, onChange: setHourIndex }
   return (
     <div className="map-panel">
-      <TripMap routes={plan.routes} heatmap={heatmap} hourIndex={hourIndex} />
-      <MapOverlay heatmap={heatmap} {...hour} />
+      <TripMap trip={trip} view={mapView(hourIndex, selection)} />
+      <MapOverlay {...overlay} />
     </div>
   )
+}
+
+function mapView(hourIndex: number, selection: RouteSelection): MapView {
+  return {
+    hourIndex,
+    selectedId: selection.selectedId,
+    onSelectRoute: selection.select,
+  }
 }
 
 interface MapOverlayProps {
@@ -100,13 +119,10 @@ interface MapOverlayProps {
 }
 
 function MapOverlay({ heatmap, hourIndex, onChange }: MapOverlayProps) {
+  const slider = { hours: heatmap.hours, hourIndex, onChange }
   return (
     <div className="map-overlay card">
-      <HeatmapSlider
-        hours={heatmap.hours}
-        hourIndex={hourIndex}
-        onChange={onChange}
-      />
+      <HeatmapSlider {...slider} />
       <RiskLegend />
     </div>
   )

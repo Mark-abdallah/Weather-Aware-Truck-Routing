@@ -8,34 +8,69 @@ import {
   levelShares,
   type LevelMiles,
 } from '../routeSummary'
+import type { RouteSelection } from '../hooks/useRouteSelection'
 import type { Route } from '../types/trip'
 
 const RANK_DIGITS = 2
 
-export function RouteCards({ routes }: { routes: Route[] }) {
+interface CardProps {
+  route: Route
+  selection: RouteSelection
+}
+
+export function RouteCards({
+  routes,
+  selection,
+}: {
+  routes: Route[]
+  selection: RouteSelection
+}) {
   return (
     <ol className="route-cards" aria-label="Routes">
       {byRank(routes).map((route) => (
-        <RouteCard key={route.route_id} route={route} />
+        <RouteCard key={route.route_id} route={route} selection={selection} />
       ))}
     </ol>
   )
 }
 
-function RouteCard({ route }: { route: Route }) {
+function RouteCard({ route, selection }: CardProps) {
+  const className = cardClass(route, selection.selectedId)
   return (
-    <li className={cardClass(route)} aria-label={`Route ${route.rank}`}>
+    <li className={className} aria-label={`Route ${route.rank}`}>
+      <SelectButton route={route} selection={selection} />
+      <CardBody route={route} />
+    </li>
+  )
+}
+
+function CardBody({ route }: { route: Route }) {
+  return (
+    <>
       <CardHeading route={route} />
       {route.has_no_travel && <NoTravelWarning />}
       <RouteStats route={route} />
       <LevelBar route={route} />
       <LevelList levels={levelBreakdown(route)} />
-    </li>
+    </>
   )
 }
 
-function cardClass(route: Route): string {
-  return route.recommended ? 'route-card is-recommended' : 'route-card'
+/** Stretched over the whole card so any click on it selects the route. */
+function SelectButton({ route, selection }: CardProps) {
+  const button = {
+    'aria-pressed': route.route_id === selection.selectedId,
+    'aria-label': `Show Route ${route.rank} on the map`,
+    onClick: () => selection.select(route.route_id),
+  }
+  return <button type="button" className="card-select" {...button} />
+}
+
+function cardClass(route: Route, selectedId: string): string {
+  const classes = ['route-card']
+  if (route.recommended) classes.push('is-recommended')
+  if (route.route_id === selectedId) classes.push('is-selected')
+  return classes.join(' ')
 }
 
 function CardHeading({ route }: { route: Route }) {

@@ -2,53 +2,62 @@ import type { Map as MapLibreMap } from 'maplibre-gl'
 import { useEffect, useRef, type RefObject } from 'react'
 import { heatmapCollection } from '../map/heatmapGeoJson'
 import {
+  applySelection,
   bindTripLayers,
   createTripMap,
   setHeatmapData,
+  type MapView,
 } from '../map/tripLayers'
-import type { Heatmap, Route } from '../types/trip'
+import type { Trip } from '../types/trip'
 
-interface MapSetup {
-  routes: Route[]
-  heatmap: Heatmap
-  hourRef: RefObject<number>
-}
+type ViewRef = RefObject<MapView>
+type MapRef = RefObject<MapLibreMap | null>
 
-/** Owns the MapLibre map; the heatmap hour switches client-side without re-creating it. */
-export function useTripMap(
-  routes: Route[],
-  heatmap: Heatmap,
-  hourIndex: number,
-) {
-  const hourRef = useRef(hourIndex)
-  const { containerRef, mapRef } = useMapInstance({ routes, heatmap, hourRef })
+/** Owns the MapLibre map; hour and selection changes update it without re-creating it. */
+export function useTripMap(trip: Trip, view: MapView) {
+  const viewRef = useRef(view)
   useEffect(() => {
-    hourRef.current = hourIndex
-    if (mapRef.current)
-      setHeatmapData(mapRef.current, heatmapCollection(heatmap, hourIndex))
-  }, [heatmap, hourIndex, mapRef])
+    viewRef.current = view
+  })
+  const { containerRef, mapRef } = useMapInstance(trip, viewRef)
+  useMapView(mapRef, trip, view)
   return containerRef
 }
 
-/** Creates the map once per routes/heatmap pair (refs are stable, so no other re-creation). */
-function useMapInstance({ routes, heatmap, hourRef }: MapSetup) {
+function useMapView(
+  mapRef: MapRef,
+  trip: Trip,
+  { hourIndex, selectedId }: MapView,
+) {
+  useEffect(() => {
+    if (mapRef.current)
+      setHeatmapData(mapRef.current, heatmapCollection(trip.heatmap, hourIndex))
+  }, [mapRef, trip.heatmap, hourIndex])
+  useEffect(() => {
+    if (mapRef.current)
+      applySelection(mapRef.current, trip.plan.routes, selectedId)
+  }, [mapRef, trip.plan.routes, selectedId])
+}
+
+/** Creates the map once per trip (the trip object is stable; refs never change). */
+function useMapInstance(trip: Trip, viewRef: ViewRef) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   useEffect(
-    () => mountMap(containerRef.current, mapRef, { routes, heatmap, hourRef }),
-    [routes, heatmap, hourRef],
+    () => mountMap(containerRef.current, mapRef, { trip, viewRef }),
+    [trip, viewRef],
   )
   return { containerRef, mapRef }
 }
 
 function mountMap(
   container: HTMLDivElement | null,
-  mapRef: RefObject<MapLibreMap | null>,
-  { routes, heatmap, hourRef }: MapSetup,
+  mapRef: MapRef,
+  { trip, viewRef }: { trip: Trip; viewRef: ViewRef },
 ): (() => void) | undefined {
   if (!container) return undefined
-  const map = createTripMap(container, routes)
-  bindTripLayers(map, routes, () => heatmapCollection(heatmap, hourRef.current))
+  const map = createTripMap(container, trip.plan.routes)
+  bindTripLayers(map, trip, () => viewRef.current)
   mapRef.current = map
   return () => {
     map.remove()

@@ -32,7 +32,8 @@ it('builds route lines in [lon, lat] order with the recommended flag', () => {
       [-99, 41],
     ],
   })
-  expect(first.properties).toEqual({ route_id: 'a', recommended: true })
+  expect(first.properties).toMatchObject({ route_id: 'a', recommended: true })
+  expect(first.properties?.label).toMatch(/· Recommended$/)
   expect(second.properties?.recommended).toBe(false)
 })
 
@@ -43,6 +44,7 @@ it('builds checkpoints coloured by level with indexes back to the data', () => {
     routeIndex: 1,
     checkpointIndex: 1,
     color: LEVEL_COLORS.no_travel,
+    route_id: 'b',
   })
   expect(features[0].geometry).toEqual({
     type: 'Point',

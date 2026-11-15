@@ -1,5 +1,5 @@
-import { render, screen, within } from '@testing-library/react'
-import { expect, it } from 'vitest'
+import { fireEvent, render, screen, within } from '@testing-library/react'
+import { expect, it, vi } from 'vitest'
 import { makeRoute } from '../../../test/tripFixture'
 import { formatDuration } from '../routeSummary'
 import { RouteCards } from './RouteCards'
@@ -19,8 +19,23 @@ const RISKY = makeRoute({
   },
 })
 
+function selection(selectedId = 'safe') {
+  return { selectedId, select: vi.fn() }
+}
+
+it('marks the selected card and selects a route on click', () => {
+  const chosen = selection()
+  render(<RouteCards routes={[SAFE, RISKY]} selection={chosen} />)
+  const safe = screen.getByRole('button', { name: 'Show Route 1 on the map' })
+  expect(safe).toHaveAttribute('aria-pressed', 'true')
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Show Route 2 on the map' }),
+  )
+  expect(chosen.select).toHaveBeenCalledWith('risky')
+})
+
 it('lists routes by rank with the recommended badge on the first', () => {
-  render(<RouteCards routes={[RISKY, SAFE]} />)
+  render(<RouteCards routes={[RISKY, SAFE]} selection={selection()} />)
   const cards = screen.getAllByRole('listitem', { name: /^Route \d$/ })
   expect(cards.map((card) => card.getAttribute('aria-label'))).toEqual([
     'Route 1',
@@ -31,7 +46,7 @@ it('lists routes by rank with the recommended badge on the first', () => {
 })
 
 it('shows stats, non-zero levels in order and the No Travel warning', () => {
-  render(<RouteCards routes={[RISKY]} />)
+  render(<RouteCards routes={[RISKY]} selection={selection()} />)
   const card = screen.getByRole('listitem', { name: 'Route 2' })
   expect(within(card).getByText('250.0 mi')).toBeInTheDocument()
   expect(within(card).getByText('4 h 5 min')).toBeInTheDocument()

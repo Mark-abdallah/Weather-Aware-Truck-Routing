@@ -1,15 +1,10 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useTripMap } from '../hooks/useTripMap'
-import type { Heatmap, Route } from '../types/trip'
+import type { MapView } from '../map/tripLayers'
+import type { Trip } from '../types/trip'
 
-interface TripMapProps {
-  routes: Route[]
-  heatmap: Heatmap
-  hourIndex: number
-}
-
-export function TripMap({ routes, heatmap, hourIndex }: TripMapProps) {
-  const containerRef = useTripMap(routes, heatmap, hourIndex)
+export function TripMap({ trip, view }: { trip: Trip; view: MapView }) {
+  const containerRef = useTripMap(trip, view)
   return (
     <div
       ref={containerRef}

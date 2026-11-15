@@ -1,5 +1,5 @@
 import { formatDateTime } from '../../../shared/format'
-import { LEVEL_LABELS } from '../risk'
+import { LEVEL_COLORS, LEVEL_LABELS } from '../risk'
 import type { Checkpoint } from '../types/trip'
 
 const MPH_DECIMALS = 0
@@ -29,10 +29,23 @@ function riskLine({ level_name, causes }: Checkpoint): string {
 /** Built with textContent (never innerHTML) so data cannot inject markup. */
 export function checkpointPopupContent(checkpoint: Checkpoint): HTMLElement {
   const container = document.createElement('div')
-  for (const line of checkpointLines(checkpoint)) {
-    const paragraph = document.createElement('p')
-    paragraph.textContent = line
-    container.append(paragraph)
-  }
+  container.append(
+    levelChip(checkpoint),
+    ...checkpointLines(checkpoint).map(paragraph),
+  )
   return container
+}
+
+function levelChip({ level_name }: Checkpoint): HTMLElement {
+  const chip = document.createElement('span')
+  chip.className = 'popup-level'
+  chip.textContent = LEVEL_LABELS[level_name]
+  chip.style.background = LEVEL_COLORS[level_name]
+  return chip
+}
+
+function paragraph(text: string): HTMLElement {
+  const element = document.createElement('p')
+  element.textContent = text
+  return element
 }
