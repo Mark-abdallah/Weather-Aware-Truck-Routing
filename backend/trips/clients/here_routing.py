@@ -15,6 +15,7 @@ ROUTE_CACHE_TTL = timedelta(hours=24)
 ALTERNATIVE_COUNT = 2
 METERS_PER_MILE = 1609.344
 KG_PER_LB = 0.45359237
+MIN_POLYLINE_POINTS = 2
 MALFORMED_ERRORS = (KeyError, TypeError, ValueError, IndexError, AttributeError)
 
 
@@ -33,8 +34,10 @@ class HereRoutingClient:
 
 
 def _parse_routes(payload: Any) -> list[RouteData]:
+    """Routes too short to sample (under 2 points) are dropped as unusable."""
     try:
-        return [_parse_route(route) for route in payload.get("routes", [])]
+        routes = [_parse_route(route) for route in payload.get("routes", [])]
+        return [route for route in routes if len(route.polyline) >= MIN_POLYLINE_POINTS]
     except MALFORMED_ERRORS:
         raise RoutingUnavailableError("Unexpected routing response") from None
 

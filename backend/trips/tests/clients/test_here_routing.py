@@ -80,3 +80,9 @@ def test_no_routes_returns_empty_list() -> None:
 def test_malformed_response_raises(body: Any) -> None:
     with pytest.raises(RoutingUnavailableError):
         fetch(body)
+
+
+@respx.mock
+def test_route_with_single_point_polyline_is_dropped() -> None:
+    single_point = {"polyline": "BFoz5xJ67i1B", "spans": [], "summary": section([])["summary"]}
+    assert fetch(payload(single_point)) == []
