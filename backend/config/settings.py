@@ -82,3 +82,10 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# httpx logs full request URLs (including the HERE apiKey) at INFO; keep it quieter.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "loggers": {"httpx": {"level": "WARNING"}},
+}

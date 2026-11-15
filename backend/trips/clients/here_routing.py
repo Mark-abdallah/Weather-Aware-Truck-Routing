@@ -28,11 +28,15 @@ class HereRoutingClient:
     ) -> list[RouteData]:
         params = route_params(origin, destination, request)
         secrets = {"apiKey": self._api_key}
-        payload = self._fetcher.get(JsonRequest(ROUTES_URL, params, ROUTE_CACHE_TTL, secrets))
-        try:
-            return [_parse_route(route) for route in payload.get("routes", [])]
-        except MALFORMED_ERRORS:
-            raise RoutingUnavailableError("Unexpected routing response") from None
+        route_request = JsonRequest(ROUTES_URL, params, ROUTE_CACHE_TTL, secrets)
+        return self._fetcher.get(route_request, _parse_routes)
+
+
+def _parse_routes(payload: Any) -> list[RouteData]:
+    try:
+        return [_parse_route(route) for route in payload.get("routes", [])]
+    except MALFORMED_ERRORS:
+        raise RoutingUnavailableError("Unexpected routing response") from None
 
 
 def route_params(origin: LatLon, destination: LatLon, request: RouteRequest) -> dict[str, str]:

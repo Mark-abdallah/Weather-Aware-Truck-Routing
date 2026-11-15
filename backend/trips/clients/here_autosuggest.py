@@ -24,11 +24,14 @@ class HereAutosuggestClient:
         params = {"q": query, "at": SEARCH_CENTER, "limit": str(SUGGESTION_LIMIT)}
         secrets = {"apiKey": self._api_key}
         request = JsonRequest(AUTOSUGGEST_URL, params, SUGGESTION_CACHE_TTL, secrets)
-        payload = self._fetcher.get(request)
-        try:
-            return [_suggestion(item) for item in payload["items"] if "position" in item]
-        except MALFORMED_ERRORS:
-            raise SuggestionsUnavailableError("Unexpected autosuggest response") from None
+        return self._fetcher.get(request, _parse_suggestions)
+
+
+def _parse_suggestions(payload: Any) -> list[Suggestion]:
+    try:
+        return [_suggestion(item) for item in payload["items"] if "position" in item]
+    except MALFORMED_ERRORS:
+        raise SuggestionsUnavailableError("Unexpected autosuggest response") from None
 
 
 def _suggestion(item: dict[str, Any]) -> Suggestion:

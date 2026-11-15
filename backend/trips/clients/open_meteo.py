@@ -40,12 +40,15 @@ class OpenMeteoClient:
     def _fetch_batch(
         self, batch: Sequence[LatLon], start: datetime, end: datetime
     ) -> list[HourlyForecast]:
-        payload = self._fetcher.get(forecast_request(batch, start, end))
-        locations = payload if isinstance(payload, list) else [payload]
-        try:
-            return [_parse_location(location) for location in locations]
-        except MALFORMED_ERRORS:
-            raise WeatherUnavailableError("Unexpected weather response") from None
+        return self._fetcher.get(forecast_request(batch, start, end), _parse_locations)
+
+
+def _parse_locations(payload: Any) -> list[HourlyForecast]:
+    locations = payload if isinstance(payload, list) else [payload]
+    try:
+        return [_parse_location(location) for location in locations]
+    except MALFORMED_ERRORS:
+        raise WeatherUnavailableError("Unexpected weather response") from None
 
 
 def forecast_request(batch: Sequence[LatLon], start: datetime, end: datetime) -> JsonRequest:

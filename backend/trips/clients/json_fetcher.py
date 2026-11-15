@@ -2,7 +2,7 @@
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import Any
@@ -32,14 +32,16 @@ class JsonFetcher:
         self._cache = cache
         self._error = error
 
-    def get(self, request: JsonRequest) -> Any:
+    def get[Result](self, request: JsonRequest, parse: Callable[[Any], Result]) -> Result:
+        """Parse the cached or downloaded payload; only payloads that parse are cached."""
         key = cache_key(request)
         cached = self._cache.get(key)
         if cached is not None:
-            return cached
+            return parse(cached)
         payload = self._download(request)
+        result = parse(payload)
         self._cache.set(key, payload, request.ttl)
-        return payload
+        return result
 
     def _download(self, request: JsonRequest) -> Any:
         try:

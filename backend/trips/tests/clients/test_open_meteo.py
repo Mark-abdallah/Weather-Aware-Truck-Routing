@@ -8,7 +8,8 @@ import respx
 from trips.clients.open_meteo import FORECAST_URL, MAX_POINTS_PER_REQUEST, OpenMeteoClient
 from trips.domain.geometry import LatLon
 from trips.domain.weather import WeatherSample
-from trips.services.ports import HourlyForecast, WeatherUnavailableError
+from trips.services.ports import HourlyForecast, WeatherQuery, WeatherUnavailableError
+from trips.services.weather_validation import fetch_forecasts
 from trips.tests.clients.fakes import make_fetcher
 
 START = datetime(2026, 1, 1, 10, 30, tzinfo=UTC)
@@ -70,3 +71,16 @@ def test_malformed_response_raises(body: Any) -> None:
     respx.get(FORECAST_URL).respond(json=body)
     with pytest.raises(WeatherUnavailableError):
         fetch([LatLon(40, -100)])
+
+
+@respx.mock
+def test_retry_after_bad_payload_downloads_again() -> None:
+    route = respx.get(FORECAST_URL)
+    route.side_effect = [
+        httpx.Response(200, json=location(rain_mm=None)),
+        httpx.Response(200, json=location()),
+    ]
+    client = OpenMeteoClient(make_fetcher(WeatherUnavailableError))
+    query = WeatherQuery((LatLon(40, -100),), START, START)
+    assert len(fetch_forecasts(client, query)) == 1
+    assert route.call_count == 2
