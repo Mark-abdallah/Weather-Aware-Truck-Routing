@@ -1,23 +1,86 @@
 # Spotter — Weather-Aware Truck Routing
 
-Helps a truck driver pick the safest of up to three HERE truck routes, based on the forecast
-weather along each route at the time the truck will actually be there, the load weight, and travel time.
+Spotter helps a truck driver or dispatcher choose the safest route between two places. It gets up
+to three truck routes, checks the forecast weather at the hour the truck will reach each point along
+the way, factors in the load weight, and ranks the routes from safest to riskiest.
 
-The product spec, with every confirmed decision, is in [`docs/SPEC.md`](docs/SPEC.md).
+![Trip overview](docs/screenshots/03-trip-overview.png)
+
+- **How to use it, step by step with screenshots:** [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)
+- **Product specification:** [`docs/SPEC.md`](docs/SPEC.md)
+
+---
 
 ## Features
 
-- Origin/destination autosuggest (HERE, proxied through Django so the key stays server-side).
-- Up to 3 truck routes (HERE Routing v8, gross weight sent in kg); a notice when fewer come back.
-- Checkpoints every 10 / 25 / 50 miles plus the destination, each with an ETA interpolated from
-  HERE span durations and the Open-Meteo forecast hour nearest that ETA.
-- Risk per checkpoint (Low → No Travel) from sustained wind, rain and snow, with load rules
-  applied to wind; all tied causes are kept.
-- Distance-weighted route metrics and a ranking: No Travel miles → Severe miles → High miles →
-  average risk → travel time. Routes with No Travel miles are still shown, with a warning.
-- MapLibre map (OpenFreeMap tiles): routes, the recommended route highlighted, risk-coloured
-  checkpoints with popups, and a corridor heatmap with a 0–48 h slider that switches hours on the client.
-- Every trip is stored and shareable at `/trips/<uuid>` as a snapshot with its "computed at" time.
+| Feature | What it does |
+|---|---|
+| Place search | Origin and destination autocomplete (HERE Autosuggest, called through the backend so the API key never reaches the browser). |
+| Truck routing | Up to 3 truck-legal routes from HERE Routing v8, using the gross weight. Shows a notice if fewer than 3 come back. |
+| Checkpoints | A weather checkpoint every 10, 25 or 50 miles plus the destination, each with its own arrival time (ETA). |
+| Forecast at arrival time | Each checkpoint uses the Open-Meteo forecast for the hour nearest its ETA, not the weather "now". |
+| Risk levels | Every checkpoint is rated Low, Moderate, High, Severe or No Travel from wind, rain and snow, with stricter wind rules for heavy loads. |
+| Route ranking | Routes are ranked by No Travel miles, then Severe miles, High miles, average risk, and finally travel time. The best one is marked **Recommended**. |
+| Route cards | Distance, duration, average risk, a coloured bar of miles at each risk level, and a warning if any part is No Travel. |
+| Interactive map | Detailed map with the start and end points marked. The selected route is shown in teal and the map zooms to it. Click a card or a route line to switch routes. |
+| Checkpoint details | Click any checkpoint to see its ETA, mile marker, wind (with gusts), rain, snow, and what caused its risk level. |
+| Weather heatmap | A risk heatmap around the routes for the next 0–48 hours. Drag the slider to see how conditions change. |
+| Shareable trips | Every trip is saved and has its own link (`/trips/<id>`), showing when it was computed. |
+| Responsive | Works on phones, tablets and desktops. |
+
+### Risk rules
+
+| Condition | Low | Moderate | High | Severe | No Travel |
+|---|---|---|---|---|---|
+| Sustained wind (mph) | < 25 | 25 – < 35 | 35 – < 45 | 45 – < 55 | ≥ 55 |
+| Rain (in/hr) | < 0.10 | 0.10 – < 0.25 | 0.25 – < 0.50 | 0.50 – 1.00 | > 1.00 |
+| Snow (in/hr) | < 0.5 | 0.5 – < 1.0 | 1.0 – < 2.0 | 2.0 – 3.0 | > 3.0 |
+
+Load rules for wind:
+- 45 – < 55 mph with more than 30,000 lb → No Travel.
+- 35 – < 45 mph with more than 40,000 lb → Severe.
+
+A checkpoint takes the worst of its wind, rain and snow levels.
+
+---
+
+## Tools and technologies
+
+### Backend
+| Tool | Used for |
+|---|---|
+| Python 3.13 | Language |
+| Django 6.1 | Web framework, ORM, migrations |
+| Django REST Framework 3.18 | REST API, serializers, validation |
+| PostgreSQL + psycopg 3 | Database (SQLite is used locally if `DATABASE_URL` is not set) |
+| httpx | HTTP client for HERE and Open-Meteo |
+| dj-database-url, python-dotenv | Configuration from environment variables / `.env` |
+| django-cors-headers | Allows the frontend to call the API |
+| gunicorn, WhiteNoise | Production server and static files |
+| pytest, pytest-django, respx | Tests (respx mocks external HTTP calls) |
+| Ruff | Linting and formatting |
+
+### Frontend
+| Tool | Used for |
+|---|---|
+| React 19 + TypeScript 6 | UI |
+| Vite 8 | Dev server and build |
+| React Router 7 | Pages (`/` and `/trips/:id`) |
+| TanStack Query 5 | Server state: fetching, caching and mutations |
+| MapLibre GL 6 | Interactive vector map |
+| Vitest + React Testing Library + jsdom | Tests |
+| ESLint + Prettier | Linting and formatting |
+
+### External services
+| Service | Used for |
+|---|---|
+| HERE Routing API v8 | Truck routes (needs `HERE_API_KEY`) |
+| HERE Autosuggest API | Place search |
+| Open-Meteo | Hourly forecast: wind, gusts, rain, snow (free, no key) |
+| OpenFreeMap | Map tiles and style |
+| Render | Hosting (Blueprint in `render.yaml`) |
+
+---
 
 ## Architecture
 
@@ -25,50 +88,46 @@ The product spec, with every confirmed decision, is in [`docs/SPEC.md`](docs/SPE
 frontend/ (React + TypeScript + Vite)          backend/ (Django + DRF)
   src/features/trips/                            trips/
     api/        HTTP calls                         domain/        pure rules: risk, load rules, metrics,
-    hooks/      TanStack Query + form/map logic                   ranking, checkpoints, forecast hour, grid
-    components/ rendering only                     services/      use cases: TripPlanner, HeatmapService,
-    map/        GeoJSON + MapLibre layers                         TripService; ports (Protocols)
-  src/shared/   http client, Field, formatting     clients/       HERE routing/autosuggest, Open-Meteo,
-                                                                  flexible-polyline decoder, cached fetcher
+    hooks/      TanStack Query, form, map,                        ranking, checkpoints, forecast hour, grid
+                route selection                    services/      use cases: TripPlanner, HeatmapService,
+    components/ rendering only                                    TripService; ports (Protocols)
+    map/        GeoJSON + MapLibre layers          clients/       HERE routing/autosuggest, Open-Meteo,
+  src/shared/   http client, Field, formatting                    flexible-polyline decoder, cached fetcher
                                                    repositories/  the only ORM code (trips, response cache)
                                                    api/           serializers, thin views, error mapping,
                                                                   composition root (dependencies.py)
 ```
 
-- **Dependency direction**: `api → services → domain`; `clients` and `repositories` implement the
-  service ports and are wired in `trips/api/dependencies.py`, so services are tested with fakes.
-- **Request flow** (`POST /api/trips`): validate → fetch routes → sample checkpoints → one batched
-  weather fetch (retried once) → assess and rank → build the 49-hour heatmap → store → `201`.
-- **Caching**: provider responses are stored in Postgres (`CachedResponse`), keyed by a hash of the
-  exact request (API key excluded): weather 1 h, routes and suggestions 24 h. Only responses that
-  parse are cached; expired rows are purged lazily on read.
+- Dependencies point `api → services → domain`. Clients and repositories implement the service
+  ports and are wired together in `trips/api/dependencies.py`, so services are tested with fakes.
+- When a trip is created (`POST /api/trips`), the backend:
+  1. validates the input,
+  2. fetches the routes,
+  3. places checkpoints along them,
+  4. fetches the weather in one batched call (retried once),
+  5. rates and ranks the routes,
+  6. builds the 49-hour heatmap,
+  7. saves the trip and returns `201`.
+- Provider responses are cached in the database: weather for 1 hour, routes and suggestions for
+  24 hours.
 
 ### API
 
 | Method | Path | Result |
 |---|---|---|
 | `POST` | `/api/trips` | `201 {id, computed_at, inputs, plan, heatmap}` |
-| `GET` | `/api/trips/<uuid>` | stored trip, or `404` |
+| `GET` | `/api/trips/<uuid>` | Saved trip, or `404` |
 | `GET` | `/api/autosuggest?q=` | `[{label, lat, lon}]` |
 | `GET` | `/api/health` | `{"status": "ok"}` |
 
-Errors: `400` invalid input (field messages), `422` no route found, `502` provider unavailable
-(e.g. "Weather service unavailable, try again"). A route is never returned without weather.
+Errors: `400` for invalid input (with messages per field), `422` when no route is found, `502` when a
+provider is unavailable. A route is never returned without weather.
 
-## Key decisions
+---
 
-- Weight is **gross vehicle weight** in lb, `0 < w ≤ 80,000`.
-- Departure must be from 1 hour ago to 7 days ahead; the browser sends ISO with offset, the backend
-  works in UTC, and times are shown in the browser's time zone.
-- Risk thresholds use an inclusive lower bound at every edge; Open-Meteo snowfall (cm) and rain (mm)
-  are converted to in/hr; gusts are informational only.
-- Heatmap: ~15 mi grid within 30 mi of any route, capped at ~600 points, load-aware, hour *h* =
-  departure + *h* at every point.
-- You must pick an autosuggest result (it carries coordinates); there is no free-text geocoding.
+## Running locally
 
-## Local setup
-
-Requirements: Python 3.13, Node 22+, PostgreSQL (SQLite is used automatically if `DATABASE_URL` is unset).
+Requirements: Python 3.13, Node 22+, and optionally PostgreSQL.
 
 ```bash
 cp .env.example .env            # set HERE_API_KEY (and DATABASE_URL for Postgres)
@@ -81,8 +140,10 @@ python manage.py runserver      # http://localhost:8000
 
 cd ../frontend
 npm install
-npm run dev                     # http://localhost:5173 (VITE_API_URL defaults to http://localhost:8000)
+npm run dev                     # http://localhost:5173
 ```
+
+The frontend calls `http://localhost:8000` unless `VITE_API_URL` is set.
 
 ## Tests and checks
 
@@ -93,13 +154,17 @@ cd frontend && npm test && npm run lint && npm run build
 
 ## Deployment (Render)
 
-`render.yaml` is a Blueprint for a free Postgres database, the Django API (gunicorn, migrations at
-start) and the React static site with an SPA rewrite. After the first deploy, set `HERE_API_KEY` and
-`CORS_ALLOWED_ORIGINS` on `spotter-api`, and `VITE_API_URL` on `spotter-web` (then redeploy the site).
+`render.yaml` is a Render Blueprint. It creates a Postgres database, the Django API (gunicorn, with
+migrations run at start) and the React static site.
 
-Free-plan caveats: the API sleeps when idle (the first request can take ~50 s) and the free
-Postgres database expires after about 30 days.
+After the first deploy:
+1. Set `HERE_API_KEY` and `CORS_ALLOWED_ORIGINS` on `spotter-api`.
+2. Set `VITE_API_URL` on `spotter-web`, then redeploy the site.
 
-## Out of scope
+On the free plan, the API sleeps when idle (the first request can take about 50 seconds), and the
+free database expires after about 30 days.
 
-Authentication, multiple stops, a custom routing engine, live traffic re-routing, notifications, mobile app.
+## Not included
+
+Authentication, multiple stops, a custom routing engine, live-traffic re-routing, notifications,
+and a native mobile app.
