@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { formatDateTime } from '../../../shared/format'
 import { useTrip } from '../hooks/useTrip'
 import type { Trip } from '../types/trip'
+import { HeatmapSlider, RiskLegend } from './HeatmapControls'
 import { RouteCards } from './RouteCards'
 import { TripMap } from './TripMap'
 
@@ -17,7 +19,7 @@ function TripView({ trip }: { trip: Trip }) {
   return (
     <section aria-label="Trip">
       <TripHeader trip={trip} />
-      <TripMap routes={trip.plan.routes} />
+      <TripMapSection trip={trip} />
       <RouteCards routes={trip.plan.routes} />
       <Link to="/">Plan another trip</Link>
     </section>
@@ -32,5 +34,18 @@ function TripHeader({ trip }: { trip: Trip }) {
       <p>{`Computed at ${formatDateTime(trip.computed_at)}`}</p>
       {trip.plan.notice && <p role="status">{trip.plan.notice}</p>}
     </header>
+  )
+}
+
+function TripMapSection({ trip }: { trip: Trip }) {
+  const [hourIndex, setHourIndex] = useState(0)
+  const { heatmap, plan } = trip
+  const slider = { hours: heatmap.hours, hourIndex, onChange: setHourIndex }
+  return (
+    <div>
+      <TripMap routes={plan.routes} heatmap={heatmap} hourIndex={hourIndex} />
+      <HeatmapSlider {...slider} />
+      <RiskLegend />
+    </div>
   )
 }

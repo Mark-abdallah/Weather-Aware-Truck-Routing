@@ -52,3 +52,23 @@ body {
   padding-left: 8px;
   margin: 4px 0;
 }
+
+.heatmap-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.risk-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  list-style: none;
+  padding: 0;
+}
+
+.risk-legend li {
+  border-left: 12px solid transparent;
+  padding-left: 6px;
+}
