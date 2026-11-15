@@ -148,13 +148,30 @@ cd backend  && pytest && ruff check .
 cd frontend && npm test && npm run lint && npm run build
 ```
 
-## Deployment (Render)
+## Deployment (Render + GitHub Actions)
 
-`render.yaml` is a Render Blueprint. It creates the Django API (gunicorn) and the React static site.
+Deploys run from the **`Deploy`** branch. Every push to it runs
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml):
 
-After the first deploy:
-1. Set `HERE_API_KEY` and `CORS_ALLOWED_ORIGINS` on `spotter-api`.
-2. Set `VITE_API_URL` on `spotter-web`, then redeploy the site.
+1. **Backend tests**: ruff lint and format check, `manage.py check`, pytest.
+2. **Frontend tests**: ESLint, Vitest, production build.
+3. **Deploy**: only if both jobs pass, it calls the Render deploy hooks for the API and the site.
+
+You can also start it by hand under **Actions → Test and deploy → Run workflow**.
+
+### One-time setup
+1. In Render, choose **New → Blueprint** and select this repo. `render.yaml` creates `spotter-api`
+   (Django + gunicorn) and `spotter-web` (static React site). Both build from the `Deploy` branch,
+   with auto-deploy turned off so only the workflow deploys.
+2. Set these environment variables in Render:
+   - `spotter-api`: `HERE_API_KEY`, and `CORS_ALLOWED_ORIGINS` set to the site URL.
+   - `spotter-web`: `VITE_API_URL` set to the API URL.
+3. Copy each service's **Settings → Deploy Hook** URL into the GitHub repo secrets (**Settings →
+   Secrets and variables → Actions**):
+   - `RENDER_DEPLOY_HOOK_API`
+   - `RENDER_DEPLOY_HOOK_WEB`
+
+To release, merge `main` into `Deploy` and push.
 
 On the free plan, the API sleeps when idle, so the first request can take about 50 seconds.
 
