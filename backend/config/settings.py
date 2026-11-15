@@ -76,5 +76,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "loggers": {"httpx": {"level": "WARNING"}},
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {
+        "httpx": {"level": "WARNING"},
+        "trips": {"handlers": ["console"], "level": "WARNING"},
+    },
 }
