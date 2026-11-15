@@ -55,21 +55,25 @@ def _checkpoint_miles(total: float, interval_mi: float) -> list[float]:
     return [*miles, total]
 
 
+@dataclass(frozen=True)
+class _Track:
+    polyline: list[LatLon]
+    cumulative: list[float]
+    anchors: list[TimeAnchor]
+
+
+def _checkpoint(track: _Track, index: int, miles: list[float]) -> Checkpoint:
+    mile = miles[index]
+    start = miles[index - 1] if index > 0 else 0.0
+    position = point_at_mile(track.polyline, track.cumulative, mile)
+    return Checkpoint(index, position, mile, mile - start, seconds_at_mile(track.anchors, mile))
+
+
 def sample_checkpoints(
     polyline: list[LatLon], interval_mi: float, anchors: list[TimeAnchor]
 ) -> list[Checkpoint]:
     if len(polyline) < 2 or interval_mi <= 0:
         raise ValueError("Need at least 2 polyline points and a positive interval")
-    cumulative = cumulative_miles(polyline)
-    miles = _checkpoint_miles(cumulative[-1], interval_mi)
-    previous_miles = [0.0, *miles]
-    return [
-        Checkpoint(
-            index=index,
-            position=point_at_mile(polyline, cumulative, mile),
-            mile=mile,
-            segment_miles=mile - previous_miles[index],
-            eta_offset_s=seconds_at_mile(anchors, mile),
-        )
-        for index, mile in enumerate(miles)
-    ]
+    track = _Track(polyline, cumulative_miles(polyline), anchors)
+    miles = _checkpoint_miles(track.cumulative[-1], interval_mi)
+    return [_checkpoint(track, index, miles) for index in range(len(miles))]

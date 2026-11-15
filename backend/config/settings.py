@@ -73,6 +73,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": [],
     "UNAUTHENTICATED_USER": None,
+    "EXCEPTION_HANDLER": "trips.api.errors.exception_handler",
 }
 
 LANGUAGE_CODE = "en-us"

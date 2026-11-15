@@ -3,7 +3,8 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
+from typing import Any, Protocol
+from uuid import UUID
 
 from trips.domain.checkpoints import TimeAnchor
 from trips.domain.geometry import LatLon
@@ -76,3 +77,17 @@ class WeatherClient(Protocol):
 
 class AddressSuggester(Protocol):
     def suggest(self, query: str) -> list[Suggestion]: ...
+
+
+@dataclass(frozen=True)
+class StoredTrip:
+    trip_id: UUID
+    computed_at: datetime
+    inputs: dict[str, Any]
+    result: dict[str, Any]
+
+
+class TripStore(Protocol):
+    def save(self, inputs: dict[str, Any], result: dict[str, Any]) -> StoredTrip: ...
+
+    def get(self, trip_id: UUID) -> StoredTrip | None: ...
