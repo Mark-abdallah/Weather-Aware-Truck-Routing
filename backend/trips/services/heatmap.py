@@ -2,11 +2,12 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+from trips.domain.forecast import MAX_DISTANCE_OUTSIDE_RANGE
 from trips.domain.geometry import LatLon
 from trips.domain.grid import GridConfig, corridor_grid
 from trips.services.assessment_at import assess_at
 from trips.services.ports import HourlyForecast, WeatherClient, WeatherQuery
-from trips.services.weather_validation import fetch_forecasts
+from trips.services.weather_validation import fetch_available_forecasts
 
 HEATMAP_HOURS = 49
 
@@ -26,15 +27,25 @@ class HeatmapService:
         self, routes: Sequence[Sequence[LatLon]], departure_utc: datetime, gross_weight_lb: float
     ) -> Heatmap:
         points = corridor_grid(routes, GridConfig())
-        hours = [departure_utc + timedelta(hours=h) for h in range(HEATMAP_HOURS)]
-        forecasts = self._forecasts(points, hours)
+        wanted = [departure_utc + timedelta(hours=h) for h in range(HEATMAP_HOURS)]
+        forecasts = self._forecasts(points, wanted)
+        hours = _covered_hours(wanted, forecasts)
         levels = [_levels_at(hour, forecasts, gross_weight_lb) for hour in hours]
         return Heatmap(points=points, hours=hours, levels=levels)
 
     def _forecasts(self, points: list[LatLon], hours: list[datetime]) -> list[HourlyForecast]:
         if not points:
             return []
-        return fetch_forecasts(self._weather, WeatherQuery(tuple(points), hours[0], hours[-1]))
+        return fetch_available_forecasts(
+            self._weather, WeatherQuery(tuple(points), hours[0], hours[-1])
+        )
+
+
+def _covered_hours(hours: list[datetime], forecasts: list[HourlyForecast]) -> list[datetime]:
+    if not forecasts:
+        return hours
+    last = min(forecast.times[-1] for forecast in forecasts) + MAX_DISTANCE_OUTSIDE_RANGE
+    return [hour for hour in hours if hour <= last]
 
 
 def _levels_at(hour: datetime, forecasts: list[HourlyForecast], load_lb: float) -> list[int]:

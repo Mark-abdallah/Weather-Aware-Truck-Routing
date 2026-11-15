@@ -65,11 +65,12 @@ def test_heatmap_with_no_points_skips_weather():
     assert heatmap.levels == [[] for _ in range(HEATMAP_HOURS)]
 
 
-def test_heatmap_short_forecast_window_raises_after_retry():
+def test_heatmap_stops_where_the_forecast_ends():
     weather = FakeWeather(lambda *_: calm(), hours_dropped=3)
-    with pytest.raises(WeatherUnavailableError):
-        HeatmapService(weather).build([ROUTE], DEPARTURE, 10_000)
-    assert weather.calls == 2
+    heatmap = HeatmapService(weather).build([ROUTE], DEPARTURE, 10_000)
+    assert len(heatmap.hours) == len(heatmap.levels) == HEATMAP_HOURS - 2
+    assert heatmap.hours[-1] == DEPARTURE + timedelta(hours=HEATMAP_HOURS - 3)
+    assert weather.calls == 1
 
 
 @pytest.mark.parametrize("delta", [-1, 1])

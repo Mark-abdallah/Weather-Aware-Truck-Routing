@@ -16,7 +16,7 @@ React + Django app that helps a truck driver choose the safest route based on we
 |---|---|
 | Routing (truck, 3 alternatives) | **HERE Routing v8**, `transportMode=truck`, pass gross weight, `alternatives=2` → 3 routes |
 | Geocoding | HERE Geocoding & Search |
-| Weather | **Open-Meteo** hourly forecast (no key), batch multi-location requests |
+| Weather | **WeatherAPI.com** hourly forecast (`WEATHERAPI_KEY`, free plan: ~3 days), one request per location, run in parallel |
 | Map | **MapLibre GL** with free vector tiles |
 | Hosting | **Render** (`render.yaml`: Django web service and React static site; no database) |
 
@@ -38,7 +38,7 @@ Levels, scored: Low=0, Moderate=1, High=2, Severe=3, No Travel=4.
 | Snow (in/hr) | <0.5 | 0.5–<1.0 | 1.0–<2.0 | 2.0–≤3.0 | >3.0 |
 
 - Wind = **sustained** wind speed; gusts shown for information only.
-- Open-Meteo snowfall is in cm/hr; convert to in/hr.
+- WeatherAPI snowfall is in cm/hr; convert to in/hr. Rain = `precip_in` for hours with no snow, otherwise 0.
 
 Load rules (applied to the wind level):
 - ≥55 mph → No Travel (any load)
@@ -69,13 +69,13 @@ Routes with any No Travel miles are still shown, with a clear warning.
 
 ## Persistence
 - None. The app is stateless: `POST /api/trips` computes and returns the plan; nothing is stored and there are no shareable trip links.
-- HERE and Open-Meteo responses are cached in memory per server process, with an expiry time (weather about 1 h, routes about 24 h).
+- HERE and WeatherAPI.com responses are cached in memory per server process, with an expiry time (weather about 1 h, routes about 24 h).
 
 ## Additional confirmed decisions
 - **Weight** = gross vehicle weight in lb, labelled "Gross weight (lb)", must be >0 and ≤80,000. Sent to HERE converted to kg.
-- **Departure**: from now−1h to now+7 days. Browser sends ISO with offset; backend works in UTC; ETAs displayed in browser time zone.
+- **Departure**: from now−1h to now+24 h (the free forecast covers about 3 calendar days). Browser sends ISO with offset; backend works in UTC; ETAs displayed in browser time zone.
 - **Weather failure**: retry once; if still failing → 502 "Weather service unavailable, try again". Never show a route without weather data.
-- **Heatmap**: grid ~15 mi spacing, points within 30 mi of any route, cap ~600 points; load-aware (same classifier as checkpoints); hour h = departure + h at every point.
+- **Heatmap**: grid ~50 mi spacing, points within 50 mi of any route, cap ~60 points; hours stop where the forecast ends; load-aware (same classifier as checkpoints); hour h = departure + h at every point.
 - **Cause tie-break**: store all tied causes; show them all in the popup.
 - **Tiles**: OpenFreeMap (no key). HERE key stays server-side; autosuggest proxied through Django.
 - **Cache**: expired entries purged on read.

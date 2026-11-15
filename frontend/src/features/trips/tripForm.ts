@@ -4,9 +4,9 @@ export const MAX_GROSS_WEIGHT_LB = 80_000
 export const INTERVAL_OPTIONS: readonly IntervalMiles[] = [10, 25, 50]
 export const DEFAULT_INTERVAL: IntervalMiles = 25
 const HOUR_MS = 60 * 60 * 1000
-const MAX_DAYS_AHEAD = 7
+const MAX_HOURS_AHEAD = 24
 const EARLIEST_MS_BEFORE_NOW = HOUR_MS
-const LATEST_MS_AFTER_NOW = MAX_DAYS_AHEAD * 24 * HOUR_MS
+const LATEST_MS_AFTER_NOW = MAX_HOURS_AHEAD * HOUR_MS
 
 export interface TripFormValues {
   origin: Place | null
@@ -68,7 +68,7 @@ function departureError(departureLocal: string, now: Date): string | undefined {
   if (departure < now.getTime() - EARLIEST_MS_BEFORE_NOW)
     return 'Departure can be at most 1 hour ago'
   if (departure > now.getTime() + LATEST_MS_AFTER_NOW)
-    return `Departure must be within ${MAX_DAYS_AHEAD} days`
+    return `Departure must be within ${MAX_HOURS_AHEAD} hours`
   return undefined
 }
 

@@ -50,7 +50,7 @@ describe('validateTripForm', () => {
 
   it.each([
     [-HOUR_MS - 60_000, 'at most 1 hour ago'],
-    [7 * 24 * HOUR_MS + 60_000, 'within 7 days'],
+    [24 * HOUR_MS + 60_000, 'within 24 hours'],
   ])('rejects departure offset %d ms', (offset, message) => {
     expect(
       validateTripForm(values({ departureLocal: at(offset) }), NOW)

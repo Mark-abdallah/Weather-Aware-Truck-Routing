@@ -12,9 +12,9 @@ DOWNSAMPLE_FRACTION_OF_SPACING = 0.5
 
 @dataclass(frozen=True)
 class GridConfig:
-    spacing_mi: float = 15.0
-    buffer_mi: float = 30.0
-    max_points: int = 600
+    spacing_mi: float = 50.0
+    buffer_mi: float = 50.0
+    max_points: int = 60
 
     def __post_init__(self) -> None:
         if self.spacing_mi <= 0:

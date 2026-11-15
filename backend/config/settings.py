@@ -36,6 +36,7 @@ SECRET_KEY = load_secret_key(DEBUG)
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS")
 HERE_API_KEY = os.environ.get("HERE_API_KEY", "")
+WEATHERAPI_KEY = os.environ.get("WEATHERAPI_KEY", "")
 
 DATABASES: dict[str, dict[str, str]] = {}
 

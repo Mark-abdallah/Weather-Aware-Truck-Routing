@@ -5,7 +5,7 @@ import pytest
 from trips.domain.geometry import LatLon, haversine_miles
 from trips.domain.grid import GridConfig, corridor_grid
 
-CONFIG = GridConfig()
+CONFIG = GridConfig(spacing_mi=15.0, buffer_mi=30.0, max_points=600)
 SMALL_ROUTE = [LatLon(40.0, -100.0 + 0.2 * i) for i in range(30)]
 MILES_PER_DEGREE_LON_AT_40 = 53.0
 LONG_ROUTE = [

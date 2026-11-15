@@ -18,13 +18,13 @@ the way, factors in the load weight, and ranks the routes from safest to riskies
 | Place search | Origin and destination autocomplete (HERE Autosuggest, called through the backend so the API key never reaches the browser). |
 | Truck routing | Up to 3 truck-legal routes from HERE Routing v8, using the gross weight. Shows a notice if fewer than 3 come back. |
 | Checkpoints | A weather checkpoint every 10, 25 or 50 miles plus the destination, each with its own arrival time (ETA). |
-| Forecast at arrival time | Each checkpoint uses the Open-Meteo forecast for the hour nearest its ETA, not the weather "now". |
+| Forecast at arrival time | Each checkpoint uses the WeatherAPI.com hourly forecast for the hour nearest its ETA, not the weather "now". ETAs come from HERE's truck travel time for each road segment, not from an assumed speed. |
 | Risk levels | Every checkpoint is rated Low, Moderate, High, Severe or No Travel from wind, rain and snow, with stricter wind rules for heavy loads. |
 | Route ranking | Routes are ranked by No Travel miles, then Severe miles, High miles, average risk, and finally travel time. The best one is marked **Recommended**. |
 | Route cards | Distance, duration, average risk, a coloured bar of miles at each risk level, and a warning if any part is No Travel. |
 | Interactive map | Detailed map with the start and end points marked. The selected route is shown in teal and the map zooms to it. Click a card or a route line to switch routes. |
 | Checkpoint details | Click any checkpoint to see its ETA, mile marker, wind (with gusts), rain, snow, and what caused its risk level. |
-| Weather heatmap | A risk heatmap around the routes for the next 0–48 hours. Drag the slider to see how conditions change. |
+| Weather heatmap | A risk heatmap on a ~50 mi grid around the routes (up to ~60 points), from departure up to 48 h ahead, or as far as the forecast reaches. Drag the slider to see how conditions change. |
 | Stateless | Nothing is stored. Each plan is computed on request and shown straight away, with the time it was computed. |
 | Responsive | Works on phones, tablets and desktops. |
 
@@ -52,7 +52,7 @@ A checkpoint takes the worst of its wind, rain and snow levels.
 | Python 3.13 | Language |
 | Django 6.1 | Web framework, ORM, migrations |
 | Django REST Framework 3.18 | REST API, serializers, validation |
-| httpx | HTTP client for HERE and Open-Meteo |
+| httpx | HTTP client for HERE and WeatherAPI.com |
 | python-dotenv | Configuration from environment variables / `.env` |
 | django-cors-headers | Allows the frontend to call the API |
 | gunicorn, WhiteNoise | Production server and static files |
@@ -75,7 +75,7 @@ A checkpoint takes the worst of its wind, rain and snow levels.
 |---|---|
 | HERE Routing API v8 | Truck routes (needs `HERE_API_KEY`) |
 | HERE Autosuggest API | Place search |
-| Open-Meteo | Hourly forecast: wind, gusts, rain, snow (free, no key) |
+| WeatherAPI.com | Hourly forecast: wind, gusts, rain, snow (free plan, needs `WEATHERAPI_KEY`) |
 | OpenFreeMap | Map tiles and style |
 | Render | Hosting (Blueprint in `render.yaml`) |
 
@@ -90,7 +90,7 @@ frontend/ (React + TypeScript + Vite)          backend/ (Django + DRF)
     hooks/      TanStack Query, form, map,                        ranking, checkpoints, forecast hour, grid
                 route selection                    services/      use cases: TripPlanner, HeatmapService,
     components/ rendering only                                    TripService; ports (Protocols)
-    map/        GeoJSON + MapLibre layers          clients/       HERE routing/autosuggest, Open-Meteo,
+    map/        GeoJSON + MapLibre layers          clients/       HERE routing/autosuggest, WeatherAPI,
   src/shared/   http client, Field, formatting                    flexible-polyline decoder, cached fetcher
                                                    api/           serializers, thin views, error mapping,
                                                                   composition root (dependencies.py)
@@ -102,7 +102,7 @@ frontend/ (React + TypeScript + Vite)          backend/ (Django + DRF)
   1. validates the input,
   2. fetches the routes,
   3. places checkpoints along them,
-  4. fetches the weather in one batched call (retried once),
+  4. fetches the weather for each point in parallel (retried once),
   5. rates and ranks the routes,
   6. builds the 49-hour heatmap,
   7. returns the plan with `201` (nothing is saved).
@@ -127,7 +127,7 @@ provider is unavailable. A route is never returned without weather.
 Requirements: Python 3.13 and Node 22+. No database is needed.
 
 ```bash
-cp .env.example .env            # set HERE_API_KEY
+cp .env.example .env            # set HERE_API_KEY and WEATHERAPI_KEY
 
 cd backend
 python -m venv .venv && .venv/Scripts/activate   # macOS/Linux: source .venv/bin/activate
@@ -164,7 +164,7 @@ You can also start it by hand under **Actions → Test and deploy → Run workfl
    (Django + gunicorn) and `spotter-web` (static React site). Both build from the `Deploy` branch,
    with auto-deploy turned off so only the workflow deploys.
 2. Set these environment variables in Render:
-   - `spotter-api`: `HERE_API_KEY`, and `CORS_ALLOWED_ORIGINS` set to the site URL.
+   - `spotter-api`: `HERE_API_KEY`, `WEATHERAPI_KEY`, and `CORS_ALLOWED_ORIGINS` set to the site URL.
    - `spotter-web`: `VITE_API_URL` set to the API URL.
 3. Copy each service's **Settings → Deploy Hook** URL into the GitHub repo secrets (**Settings →
    Secrets and variables → Actions**):

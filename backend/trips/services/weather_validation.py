@@ -12,27 +12,38 @@ from trips.services.retry import retry_once
 
 
 def fetch_forecasts(weather: WeatherClient, query: WeatherQuery) -> list[HourlyForecast]:
-    return retry_once(lambda: _fetch_and_validate(weather, query))
+    return retry_once(lambda: _fetch_and_validate(weather, query, require_end=True))
 
 
-def _fetch_and_validate(weather: WeatherClient, query: WeatherQuery) -> list[HourlyForecast]:
+def fetch_available_forecasts(weather: WeatherClient, query: WeatherQuery) -> list[HourlyForecast]:
+    return retry_once(lambda: _fetch_and_validate(weather, query, require_end=False))
+
+
+def _fetch_and_validate(
+    weather: WeatherClient, query: WeatherQuery, require_end: bool
+) -> list[HourlyForecast]:
     forecasts = weather.fetch_hourly(query.points, query.start, query.end)
     if len(forecasts) != len(query.points):
         raise WeatherUnavailableError("Weather provider returned a wrong forecast count")
     for forecast in forecasts:
-        _validate_forecast(forecast, query)
+        _validate_forecast(forecast, query.start)
+        if require_end:
+            _validate_end(forecast, query.end)
     return forecasts
 
 
-def _validate_forecast(forecast: HourlyForecast, query: WeatherQuery) -> None:
+def _validate_forecast(forecast: HourlyForecast, start: datetime) -> None:
     times = forecast.times
     if not times or len(times) != len(forecast.samples):
         raise WeatherUnavailableError("Weather forecast is empty or misaligned")
     if not _is_ordered_and_aware(times):
         raise WeatherUnavailableError("Weather forecast times are unordered or naive")
-    if times[0] - MAX_DISTANCE_OUTSIDE_RANGE > query.start:
+    if times[0] - MAX_DISTANCE_OUTSIDE_RANGE > start:
         raise WeatherUnavailableError("Weather forecast starts too late")
-    if times[-1] + MAX_DISTANCE_OUTSIDE_RANGE < query.end:
+
+
+def _validate_end(forecast: HourlyForecast, end: datetime) -> None:
+    if forecast.times[-1] + MAX_DISTANCE_OUTSIDE_RANGE < end:
         raise WeatherUnavailableError("Weather forecast ends too early")
 
 

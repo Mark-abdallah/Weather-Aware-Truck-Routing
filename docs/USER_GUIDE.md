@@ -10,7 +10,7 @@ Open the app. The planner form has five fields:
 |---|---|
 | Origin | Where the truck starts. Pick a place from the suggestions. |
 | Destination | Where the truck is going. Pick a place from the suggestions. |
-| Departure | Date and time the truck leaves: from 1 hour ago up to 7 days ahead. |
+| Departure | Date and time the truck leaves: from 1 hour ago up to 24 hours ahead. |
 | Gross weight (lb) | Total weight of truck plus load, up to 80,000 lb. Heavier loads get stricter wind rules. |
 | Checkpoint every | How often to check the weather along the route: 10, 25 or 50 miles. |
 
@@ -64,7 +64,7 @@ zooms to it, its checkpoints appear, and its card is outlined in teal.
 ## 6. See how the weather changes
 
 The heatmap shows risk around the routes. Drag the slider at the bottom of the map from **+0 h** to
-**+48 h** after departure to watch storms move. The legend gives the colour for each level, from
+up to **+48 h** after departure (as far as the forecast reaches) to watch storms move. The legend gives the colour for each level, from
 Low (green) to No Travel (purple).
 
 ![Heatmap slider](screenshots/06-heatmap-slider.png)
