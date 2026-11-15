@@ -1,0 +1,54 @@
+# Render Blueprint: Django API + managed Postgres + React static site.
+# After the first deploy, set the values marked `sync: false` in the Render dashboard:
+#   spotter-api: HERE_API_KEY, CORS_ALLOWED_ORIGINS (the static site URL, e.g. https://spotter-web.onrender.com)
+#   spotter-web: VITE_API_URL (the API URL, e.g. https://spotter-api.onrender.com), then redeploy the site.
+
+databases:
+  - name: spotter-db
+    plan: free
+    databaseName: spotter
+    user: spotter
+
+services:
+  - type: web
+    name: spotter-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    # Migrations run at start because pre-deploy commands are not available on the free plan.
+    # A trip makes one HERE call plus several sequential Open-Meteo calls, so allow 120 s.
+    startCommand: python manage.py migrate --noinput && gunicorn config.wsgi --bind 0.0.0.0:$PORT --timeout 120
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.17
+      - key: DATABASE_URL
+        fromDatabase:
+          name: spotter-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "false"
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: HERE_API_KEY
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+  - type: web
+    name: spotter-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    # Client-side routing: serve index.html for /trips/<id> and any other path.
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
