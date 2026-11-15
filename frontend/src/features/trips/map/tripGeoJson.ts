@@ -50,13 +50,15 @@ function checkpointFeature(
   }
 }
 
-/** [[west, south], [east, north]] covering every route point. */
+/** [[west, south], [east, north]] covering every route point (a loop: polylines can be huge). */
 export function routeBounds(routes: Route[]): [LonLat, LonLat] {
-  const points = routes.flatMap((route) => route.polyline.map(toLonLat))
-  const lons = points.map(([lon]) => lon)
-  const lats = points.map(([, lat]) => lat)
+  let [west, south, east, north] = [Infinity, Infinity, -Infinity, -Infinity]
+  for (const [lat, lon] of routes.flatMap((route) => route.polyline)) {
+    ;[west, east] = [Math.min(west, lon), Math.max(east, lon)]
+    ;[south, north] = [Math.min(south, lat), Math.max(north, lat)]
+  }
   return [
-    [Math.min(...lons), Math.min(...lats)],
-    [Math.max(...lons), Math.max(...lats)],
+    [west, south],
+    [east, north],
   ]
 }

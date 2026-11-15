@@ -56,3 +56,14 @@ it('bounds cover every route point', () => {
     [-98, 42],
   ])
 })
+
+it('bounds handle very long polylines', () => {
+  const polyline = Array.from({ length: 300_000 }, (_, i): [number, number] => [
+    30 + i / 100_000,
+    -100 + i / 100_000,
+  ])
+  expect(routeBounds([makeRoute({ polyline })])).toEqual([
+    [-100, 30],
+    [-100 + 299_999 / 100_000, 30 + 299_999 / 100_000],
+  ])
+})

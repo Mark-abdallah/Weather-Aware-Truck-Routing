@@ -97,6 +97,9 @@ cd frontend && npm test && npm run lint && npm run build
 start) and the React static site with an SPA rewrite. After the first deploy, set `HERE_API_KEY` and
 `CORS_ALLOWED_ORIGINS` on `spotter-api`, and `VITE_API_URL` on `spotter-web` (then redeploy the site).
 
+Free-plan caveats: the API sleeps when idle (the first request can take ~50 s) and the free
+Postgres database expires after about 30 days.
+
 ## Out of scope
 
 Authentication, multiple stops, a custom routing engine, live traffic re-routing, notifications, mobile app.

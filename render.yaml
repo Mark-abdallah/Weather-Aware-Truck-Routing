@@ -17,8 +17,9 @@ services:
     rootDir: backend
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
     # Migrations run at start because pre-deploy commands are not available on the free plan.
+    # Threads keep health checks and autosuggest responsive while a trip is being planned.
     # A trip makes one HERE call plus several sequential Open-Meteo calls, so allow 120 s.
-    startCommand: python manage.py migrate --noinput && gunicorn config.wsgi --bind 0.0.0.0:$PORT --timeout 120
+    startCommand: python manage.py migrate --noinput && gunicorn config.wsgi --bind 0.0.0.0:$PORT --timeout 120 --workers 2 --threads 4
     healthCheckPath: /api/health
     envVars:
       - key: PYTHON_VERSION
@@ -50,5 +51,7 @@ services:
         source: /*
         destination: /index.html
     envVars:
+      - key: NODE_VERSION
+        value: "22"
       - key: VITE_API_URL
         sync: false
