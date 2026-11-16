@@ -1,4 +1,4 @@
-name: Test and deploy
+name: Test
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy
+  group: test
   cancel-in-progress: false
 
 jobs:
@@ -50,23 +50,3 @@ jobs:
       - run: npm test
       - run: npm run build
 
-  deploy:
-    name: Deploy to Render
-    needs: [backend, frontend]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check deploy hooks are configured
-        env:
-          API_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
-          WEB_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_WEB }}
-        run: |
-          test -n "$API_HOOK" || { echo "::error::Secret RENDER_DEPLOY_HOOK_API is not set"; exit 1; }
-          test -n "$WEB_HOOK" || { echo "::error::Secret RENDER_DEPLOY_HOOK_WEB is not set"; exit 1; }
-      - name: Deploy API
-        run: curl --fail --silent --show-error -X POST "$HOOK" > /dev/null
-        env:
-          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_API }}
-      - name: Deploy web
-        run: curl --fail --silent --show-error -X POST "$HOOK" > /dev/null
-        env:
-          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_WEB }}

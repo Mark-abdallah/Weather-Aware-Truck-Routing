@@ -6,7 +6,7 @@ services:
     plan: free
     rootDir: backend
     branch: Deploy
-    autoDeployTrigger: "off"
+    autoDeployTrigger: checksPass
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
     startCommand: gunicorn config.wsgi --bind 0.0.0.0:$PORT --timeout 120 --workers 2 --threads 4
     healthCheckPath: /api/health
@@ -31,7 +31,7 @@ services:
     runtime: static
     rootDir: frontend
     branch: Deploy
-    autoDeployTrigger: "off"
+    autoDeployTrigger: checksPass
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     routes:

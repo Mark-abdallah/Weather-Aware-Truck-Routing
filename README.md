@@ -151,25 +151,20 @@ cd frontend && npm test && npm run lint && npm run build
 ## Deployment (Render + GitHub Actions)
 
 Deploys run from the **`Deploy`** branch. Every push to it runs
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml):
+[`.github/workflows/test.yml`](.github/workflows/test.yml):
 
 1. **Backend tests**: ruff lint and format check, `manage.py check`, pytest.
 2. **Frontend tests**: ESLint, Vitest, production build.
-3. **Deploy**: only if both jobs pass, it calls the Render deploy hooks for the API and the site.
 
-You can also start it by hand under **Actions → Test and deploy → Run workflow**.
+Render watches the branch and deploys both services only after all GitHub checks pass
+(`autoDeployTrigger: checksPass` in `render.yaml`).
 
 ### One-time setup
 1. In Render, choose **New → Blueprint** and select this repo. `render.yaml` creates `spotter-api`
-   (Django + gunicorn) and `spotter-web` (static React site). Both build from the `Deploy` branch,
-   with auto-deploy turned off so only the workflow deploys.
+   (Django + gunicorn) and `spotter-web` (static React site). Both build from the `Deploy` branch.
 2. Set these environment variables in Render:
    - `spotter-api`: `HERE_API_KEY`, `WEATHERAPI_KEY`, and `CORS_ALLOWED_ORIGINS` set to the site URL.
    - `spotter-web`: `VITE_API_URL` set to the API URL.
-3. Copy each service's **Settings → Deploy Hook** URL into the GitHub repo secrets (**Settings →
-   Secrets and variables → Actions**):
-   - `RENDER_DEPLOY_HOOK_API`
-   - `RENDER_DEPLOY_HOOK_WEB`
 
 To release, merge `main` into `Deploy` and push.
 
